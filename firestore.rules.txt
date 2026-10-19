@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Os dados de autenticação são privados: somente o Admin SDK do servidor os acessa.
+    match /bope_users/{document} { allow read, write: if false; }
+    match /bope_private/{document=**} { allow read, write: if false; }
+
+    // Regulamentos: leitura pública; escrita somente por sessão administrativa BOPE.
+    match /artifacts/{appId}/public/data/pc_vademecum_docs/{document} {
+      allow read: if true;
+      allow create, update, delete: if request.auth != null
+        && request.auth.token.bope == true
+        && request.auth.token.role in ['Corregedoria', 'Corregedor-Geral'];
+    }
+    // Auditoria: leitura restrita à Corregedoria; gravação somente por usuários autenticados.
+    match /artifacts/{appId}/public/data/bope_audit_logs/{document} {
+      allow read: if request.auth != null && request.auth.token.bope == true
+        && request.auth.token.role in ['Corregedoria', 'Corregedor-Geral'];
+      allow create: if request.auth != null && request.auth.token.bope == true;
+      allow update, delete: if false;
+    }
+    // Bloqueio padrão para todo o restante.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

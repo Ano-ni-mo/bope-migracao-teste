@@ -1,0 +1,28 @@
+BOPE — PACOTE DE INTEGRAÇÃO PARA TESTE (NÃO PUBLICAR POR ARRASTAR HTML)
+
+O que contém:
+- index.html: cópia do site com integração inicial ao endpoint bope-auth
+- netlify/functions/bope-auth.mjs: autenticação QRA + senha e gestão de contas no servidor
+- firestore.rules.txt: proposta de regras Firestore para revisão/aplicação
+- netlify.toml / package.json: configuração Netlify Functions
+
+IMPORTANTE
+1. Este pacote ainda precisa de teste integrado real no Netlify/Firebase antes de substituir o site atual.
+2. Arrastar somente o HTML/ZIP para o deploy manual do Netlify NÃO publica/compila a função serverless. Use deploy por CLI ou integração Git.
+3. Não apague nem substitua o site atual; crie primeiro um deploy de teste separado.
+4. No Netlify de teste, configure as variáveis:
+   - FIREBASE_SERVICE_ACCOUNT_JSON: JSON da conta de serviço do projeto bope-1ccf7 (já existe no projeto original, mas não presuma que será copiada ao site de teste).
+   - BOPE_SETUP_KEY: segredo aleatório longo (mínimo 24 caracteres); usado uma única vez para criar o primeiro Corregedor-Geral. Não colocar no HTML nem compartilhar publicamente.
+   - BOPE_ALLOWED_ORIGIN: URL HTTPS exata do deploy de teste (opcional; o padrão é o domínio de produção atual).
+5. Revise e aplique firestore.rules.txt no projeto bope-1ccf7 somente depois de conferir os caminhos e o plano de migração.
+6. O novo banco precisa receber os documentos do backup-completo-bope.json após o primeiro login administrativo. Não importe accessList antiga: ela contém credenciais legadas e o novo backend não a usa.
+7. A autenticação e o cadastro de contas foram movidos para o backend; algumas operações auxiliares (especialmente auditoria/limpeza e recuperação de cargo) ainda precisam de validação/refino. Não considerar este pacote pronto para produção.
+
+Teste mínimo antes de qualquer troca:
+- abrir a URL de teste e confirmar leitura dos documentos;
+- criar o primeiro Corregedor-Geral com BOPE_SETUP_KEY;
+- sair e entrar por QRA + senha;
+- cadastrar um segundo usuário, alterar senha e remover usuário de teste;
+- importar somente documents do backup;
+- testar edição de um documento e conferir as regras Firestore;
+- verificar logs e confirmar que usuários/senhas não aparecem em documentos públicos.

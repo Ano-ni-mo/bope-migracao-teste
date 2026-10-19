@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regulamento - B.O.P.E</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script>
+        // Cópia, colagem, recorte e menu de contexto permanecem habilitados
+        // para permitir edição normal dos textos do regulamento.
+    </script>
+    
+    <style>
+        :root {
+            --bope-dark: #1e293b; /* Slate 800 - Fundo Principal/Header */
+            --bope-darker: #0f172a; /* Slate 900 - Fundo Profundo */
+            --bope-silver: #cbd5e1; /* Slate 300 - Prata/Metálico */
+            --bope-accent: #3b82f6; /* Blue 500 - Destaques do BOPE */
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            background-image: url('data:image/svg+xml,%3Csvg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%23cbd5e1" fill-opacity="0.3" fill-rule="evenodd"%3E%3Ccircle cx="3" cy="3" r="3"/%3E%3Cg/%3E%3C/svg%3E');
+        }
+
+        .legal-document { font-family: 'Playfair Display', serif; }
+        
+        .law-capitulo { text-align: left; font-variant: small-caps; font-weight: 700; letter-spacing: 0.08em; font-size: 1.2rem; }
+        .law-titulo { text-align: center; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.5rem; margin-bottom: 0.5rem; }
+        .law-secao { text-align: left; font-weight: 600; color: #334155; margin-top: 0.5rem; margin-bottom: 0.5rem; font-size: 0.95rem; border-left: 4px solid var(--bope-accent); }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .shake-anim {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .editor-textarea { min-height: 40px; resize: vertical; overflow-y: hidden; }
+        .document-spoiler summary { cursor: pointer; list-style: none; }
+        .document-spoiler summary::-webkit-details-marker { display: none; }
+        .document-spoiler summary::after { content: '▾'; float: right; transition: transform .2s; }
+        .document-spoiler[open] summary::after { transform: rotate(180deg); }
+        body, #documentContainer, #visualBuilderContainer, input, textarea, select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden text-gray-800 antialiased selection:bg-[var(--bope-accent)] selection:text-white" id="appBody">
+
+    <!-- Toast de Notificação de Erro -->
+    <div id="loginErrorToast" class="fixed top-6 right-6 z-[200] transform translate-x-[150%] transition-transform duration-500 ease-out flex items-start bg-white border-l-4 border-red-500 shadow-[0_10px_40px_-10px_rgba(239,68,68,0.5)] rounded-xl p-4 max-w-sm">
+        <div class="text-red-500 mr-3 mt-0.5 text-lg">
+            <i class="fas fa-handcuffs"></i>
+        </div>
+        <div class="pr-6">
+            <h4 class="text-sm font-bold text-gray-900 mb-0.5 uppercase tracking-wider">Acesso Negado</h4>
+            <p class="text-xs text-gray-600 font-medium" id="loginErrorToastMessage">QRA ou Senha incorretos. Procure o Administrador do Sistema.</p>
+        </div>
+        <button onclick="hideLoginErrorToast()" class="absolute top-2 right-2 text-gray-400 hover:text-red-500 transition-colors p-1">
+            <i class="fas fa-times text-xs"></i>
+        </button>
+    </div>
+
+    <!-- Overlay de Autenticação Obrigatória -->
+    <div id="mandatoryAuthOverlay" class="hidden fixed inset-0 bg-[#070b14] z-[100] flex items-center justify-center p-4 min-h-screen">
+        <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 20px 20px;"></div>
+        <div class="flex flex-col items-center justify-center max-w-sm w-full relative z-10 mx-auto my-auto">
+            <div class="self-end text-slate-400 text-[10px] uppercase tracking-[0.2em] mb-2">Acesso institucional restrito</div>
+            <div id="mandatoryLoginCard" class="bg-slate-950 rounded-2xl shadow-2xl w-full overflow-hidden border border-blue-400/30 transform transition-all mb-2 mx-auto">
+                <div class="bg-gradient-to-b from-[var(--bope-dark)] to-[var(--bope-darker)] px-6 py-5 text-center text-white relative">
+                    <div class="absolute inset-0 opacity-[0.05] pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 16px 16px;"></div>
+                    <div id="loginPanelLogo" class="w-16 h-16 rounded-full border-[3px] border-[var(--bope-silver)] mx-auto mb-2 shadow-[0_0_25px_rgba(0,0,0,0.6)] overflow-hidden bg-[var(--bope-darker)] flex items-center justify-center">
+                        <i class="fas fa-shield-halved text-4xl text-[var(--bope-silver)]"></i>
+                    </div>
+                    <h1 class="text-lg font-black tracking-[0.2em] text-white uppercase drop-shadow-md">REGULAMENTO B.O.P.E</h1>
+                    <p class="text-[10px] text-blue-300 uppercase tracking-[0.15em] font-medium opacity-80 mt-1">CENTRAL DE ACESSO DA CORREGEDORIA</p>
+                </div>
+                <div class="px-5 py-4 space-y-3 bg-slate-950">
+                    <div class="rounded-xl border border-slate-700 bg-slate-900/80 p-3 text-xs text-slate-300 flex items-center gap-3">
+                        <i class="fas fa-shield-halved text-amber-400 text-lg"></i>
+                        <span><strong class="block text-white uppercase tracking-wider text-[10px] mb-1">Sistema de controle interno</strong>Identifique-se com suas credenciais funcionais para acessar os recursos da Corregedoria.</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1">QRA DO CORREGEDOR</label>
+                        <input type="text" id="mandatoryQra" class="w-full bg-slate-900 text-white border border-slate-700 rounded-xl p-2.5 text-sm outline-none focus:border-[var(--bope-accent)] focus:ring-1 focus:ring-[var(--bope-accent)]" placeholder="Ex: Sliker">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1">SENHA DE ACESSO</label>
+                        <input type="password" id="mandatoryPass" class="w-full bg-slate-900 text-white border border-slate-700 rounded-xl p-2.5 text-sm outline-none focus:border-[var(--bope-accent)] focus:ring-1 focus:ring-[var(--bope-accent)]" placeholder="••••" onkeyup="if(event.key === 'Enter') submitMandatoryLogin()">
+                    </div>
+                    <button id="btnLoginSubmit" onclick="submitMandatoryLogin()" disabled class="w-full py-3.5 bg-[var(--bope-dark)] text-white hover:bg-[var(--bope-darker)] rounded-xl transition-colors font-bold text-sm tracking-wider uppercase shadow-md flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
+                        <i class="fas fa-spinner fa-spin"></i> CONECTANDO...
+                    </button>
+                    <button id="btnFirstCorregedorSetup" onclick="window.setupFirstCorregedor()" class="hidden w-full py-3 text-xs font-bold uppercase tracking-wide border border-amber-300 text-amber-800 bg-amber-50 rounded-xl hover:bg-amber-100">Configurar primeiro acesso da Corregedoria</button>
+                    <p id="loginAccessNotice" class="text-[11px] text-slate-500 text-center">Acesso restrito a militares previamente cadastrados pela Corregedoria.</p>
+                    <div class="border-t border-slate-800 pt-3 mt-2">
+                        <button type="button" onclick="document.getElementById('mandatoryAuthOverlay').classList.add('hidden')" class="w-full py-2.5 px-3 rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2"><i class="fas fa-arrow-left"></i> Retornar ao regulamento</button>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center text-[10px] text-slate-400 uppercase tracking-widest drop-shadow-md">
+                <p>Desenvolvido & idealizado por Sliker Oliveira (42107)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay da Barra Lateral -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden opacity-0 transition-opacity duration-300" onclick="toggleSidebar()"></div>
+
+    <!-- Barra Lateral NAVEGAÇÃO -->
+    <aside id="sidebar" class="fixed top-0 left-0 h-full w-72 bg-gradient-to-b from-[var(--bope-dark)] to-[var(--bope-darker)] text-white flex flex-col shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 border-r border-slate-700/50">
+        <div class="p-6 flex justify-between items-start relative z-10">
+            <button onclick="toggleSidebar()" class="text-white/50 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+        </div>
+
+        <div class="px-8 pb-6 flex flex-col items-center relative z-10 -mt-4">
+            <div class="relative group">
+                <div class="absolute inset-0 bg-[var(--bope-silver)] rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+                <div id="sidebarLogoContainer" class="w-28 h-28 rounded-full border-[3px] border-[var(--bope-silver)] shadow-[0_0_25px_rgba(0,0,0,0.8)] relative z-10 overflow-hidden bg-[var(--bope-darker)] flex items-center justify-center">
+                    <i class="fas fa-shield-halved text-5xl text-[var(--bope-silver)]"></i>
+                </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+                <h1 class="text-lg font-black tracking-[0.2em] text-white uppercase drop-shadow-md" id="sidebarUserQra">Consulta pública</h1>
+                <p class="text-[10px] text-blue-300 uppercase tracking-[0.1em] font-semibold mt-0.5" id="sidebarUserRole">Acesso de leitura · sem cadastro</p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-2 relative z-10 w-full">
+            <p class="px-8 text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400 mb-4">Arquivos Institucionais BOPE</p>
+            <ul class="space-y-1.5 px-4" id="navMenu"></ul>
+        </nav>
+
+        <div class="p-5 relative z-10 bg-[#070b14]/80 backdrop-blur-md border-t border-white/5 flex flex-col gap-2">
+            <button id="btnCorregedoriaLogin" onclick="window.openCorregedoriaLogin()" class="w-full py-2.5 px-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs flex items-center gap-2 text-slate-300 transition-colors border border-white/5">
+                <i class="fas fa-shield-halved text-[var(--bope-silver)]"></i> Acesso da Corregedoria
+            </button>
+            <button id="btnSelfPassword" onclick="openSelfPasswordModal()" class="w-full py-2 px-3 bg-white/5 hover:bg-white/10 rounded-xl text-xs flex items-center gap-2 text-slate-300 transition-colors border border-white/5">
+                <i class="fas fa-key text-[var(--bope-silver)]"></i> Alterar Minha Senha
+            </button>
+            <button id="btnAccessCenter" onclick="openAccessCenter()" class="w-full py-2.5 px-4 bg-slate-800/60 hover:bg-slate-700/80 rounded-xl text-xs flex items-center justify-between transition-all border border-slate-600/30 text-white hidden group">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-users-cog text-blue-400"></i>
+                    <span class="font-medium tracking-wide"> Painel / Administração</span>
+                </div>
+                <i class="fas fa-chevron-right text-[10px] opacity-50"></i>
+            </button>
+            <button id="btnLogout" onclick="logoutSession()" class="w-full py-2.5 px-4 bg-red-950/40 hover:bg-red-900/50 rounded-xl text-xs flex items-center gap-2 text-red-300 transition-colors border border-red-500/20">
+                <i class="fas fa-sign-out-alt"></i> Sair do Sistema
+            </button>
+        </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 flex flex-col h-screen relative z-10 w-full bg-slate-100">
+        <header class="flex bg-white/90 backdrop-blur-md shadow-sm border-b border-gray-200/80 px-4 md:px-8 py-3.5 items-center justify-between z-20 sticky top-0">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="text-gray-600 hover:text-[var(--bope-accent)] hover:bg-slate-100 p-2 rounded-xl transition-colors focus:outline-none">
+                    <i class="fas fa-bars text-lg"></i>
+                </button>
+                <div class="h-6 w-px bg-gray-300 hidden md:block"></div>
+                <h2 class="text-base md:text-lg font-bold text-slate-800 tracking-tight" id="headerTitle">Manuais do BOPE</h2>
+            </div>
+            
+            <!-- Badge de Administração Ajustado -->
+            <div class="flex items-center gap-3 min-w-0">
+                <div id="adminBadge" class="hidden flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg min-w-0">
+                    <div class="relative flex h-2 w-2 shrink-0">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-[var(--bope-accent)]"></span>
+                    </div>
+                    <span id="adminBadgeText" class="text-[10px] font-bold uppercase tracking-widest text-[var(--bope-accent)] truncate">AUTORIDADE INSTITUCIONAL</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 relative shadow-inner min-w-0" id="contentArea">
+            <div class="max-w-6xl mx-auto min-h-full pb-12 w-full min-w-0" id="documentContainer"></div>
+            
+            <div class="max-w-6xl mx-auto mt-4 text-center text-[10px] text-slate-500 uppercase tracking-widest mb-6">
+                <p>DESENVOLVIDO & IDEALIZADO POR SLIKER OLIVEIRA (42107)</p>
+                <div class="mt-3 normal-case text-slate-400 text-[11px] bg-slate-200/50 p-2.5 rounded-xl inline-block max-w-2xl border border-slate-300">
+                    <strong>AVISO:</strong> Este conteúdo é puramente <strong>FICCIONAL</strong>, criado exclusivamente para entretenimento e Roleplay na cidade Brasil RP. Não possui qualquer ligação, aprovação ou relação com as instituições policiais da vida real.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Mensagens Genéricas -->
+    <div id="msgModal" class="fixed inset-0 bg-[#070b14]/80 backdrop-blur-sm z-[90] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="msgModalCard">
+            <div class="p-6">
+                <h3 class="text-lg font-bold text-slate-900 mb-2" id="msgTitle">Aviso</h3>
+                <p class="text-sm text-slate-600 mb-6" id="msgText"></p>
+                <div class="flex justify-end gap-2">
+                    <button id="msgBtnCancel" class="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-xl hidden transition-colors">Cancelar</button>
+                    <button id="msgBtnConfirm" class="px-4 py-2 text-sm font-medium bg-[var(--bope-dark)] text-white hover:bg-[var(--bope-darker)] rounded-xl transition-colors">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Central de Acessos (Alto Comando) -->
+    <div id="accessModal" class="fixed inset-0 bg-[#070b14]/80 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col transform transition-all duration-300 scale-95 opacity-0 overflow-hidden" id="accessModalCard">
+            <div class="px-6 py-4 bg-[var(--bope-dark)] text-white flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-users-cog text-[var(--bope-silver)] text-xl"></i>
+                    <h3 class="text-lg font-bold tracking-wide">Administração do BOPE</h3>
+                </div>
+                <button onclick="closeAccessCenter()" class="text-white/50 hover:text-white transition-colors"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            
+            <div class="px-6 pt-5 bg-slate-50">
+                <div id="generalRoleRecovery" class="hidden mb-3 rounded-xl border border-amber-300 bg-amber-50 p-3">
+                    <p class="text-xs text-amber-900 mb-2">Nenhuma conta Corregedor-Geral foi reconhecida. Como recuperação de acesso, você pode promover sua própria conta uma única vez; esta opção desaparece quando houver um Corregedor-Geral cadastrado.</p>
+                    <button type="button" onclick="window.recoverGeneralRole()" class="px-3 py-2 rounded-lg bg-amber-700 text-white text-xs font-bold">Recuperar meu cargo de Corregedor-Geral</button>
+                </div>
+                <div class="flex flex-wrap gap-2" role="tablist" aria-label="Seções administrativas">
+                    <button type="button" onclick="window.switchAdminTab('usuarios')" data-admin-tab-button="usuarios" class="px-4 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white">Efetivo e acessos</button>
+                    <button type="button" onclick="window.switchAdminTab('auditoria')" data-admin-tab-button="auditoria" class="px-4 py-2 rounded-lg text-xs font-bold bg-white text-slate-700 border">Auditoria</button>
+                    <button type="button" onclick="window.switchAdminTab('manutencao')" data-admin-tab-button="manutencao" class="px-4 py-2 rounded-lg text-xs font-bold bg-white text-slate-700 border">Manutenção e backups</button>
+                </div>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-50 space-y-6" id="adminTabContent">
+                <div data-admin-tab="manutencao" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Brasão / Foto de Perfil da Intranet</h4>
+                    <p class="text-xs text-slate-500">Cole abaixo o link direto da imagem (URL) para alterar o distintivo exibido no menu lateral e no painel de login (deixe em branco para usar o padrão).</p>
+                    <div class="flex gap-2">
+                        <input type="url" id="siteLogoInput" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-[var(--bope-accent)]" placeholder="https://exemplo.com/brasao_bope.png">
+                        <button onclick="saveSiteLogo()" class="px-4 py-2.5 bg-[var(--bope-dark)] text-white text-xs font-bold uppercase rounded-xl hover:bg-slate-800 transition-colors">Aplicar Logo</button>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 space-y-2">
+                        <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider">Imagem do acesso da Corregedoria</label>
+                        <p class="text-[11px] text-slate-500">Informe uma URL direta de imagem (https://). Deixe em branco para usar o brasão padrão.</p>
+                        <div class="flex gap-2">
+                            <input type="url" id="loginPanelLogoInput" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-[var(--bope-accent)]" placeholder="https://exemplo.com/imagem-bope.png">
+                            <button onclick="saveLoginPanelLogo()" class="px-4 py-2.5 bg-[var(--bope-dark)] text-white text-xs font-bold uppercase rounded-xl hover:bg-slate-800 transition-colors">Aplicar imagem</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-admin-tab="manutencao" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Editar títulos e nomes dos documentos</h4>
+                    <p class="text-xs text-slate-500">Altere os títulos exibidos no menu e no topo dos documentos. As alterações ficam salvas nas configurações do Firebase e não exigem editar o HTML.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <label class="text-xs font-semibold text-slate-600">Nome no menu — Código Penal<input id="titleMenuCodigoPenal" class="mt-1 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" placeholder="Código Penal"></label>
+                        <label class="text-xs font-semibold text-slate-600">Título do documento — Código Penal<input id="titleDocCodigoPenal" class="mt-1 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" placeholder="Código Penal do Batalhão de Operações Especiais"></label>
+                        <label class="text-xs font-semibold text-slate-600">Nome no menu — Conduta Militar<input id="titleMenuConduta" class="mt-1 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" placeholder="Código de Conduta Militar"></label>
+                        <label class="text-xs font-semibold text-slate-600">Título do documento — Conduta Militar<input id="titleDocConduta" class="mt-1 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" placeholder="Código de Conduta Militar"></label>
+                        <label class="text-xs font-semibold text-slate-600 md:col-span-2">Nome no menu e título — Plano de Controle Emergencial<input id="titlePce" class="mt-1 w-full bg-slate-50 border border-slate-300 rounded-lg p-2.5 text-sm" placeholder="Plano de Controle Emergencial"></label>
+                    </div>
+                    <button onclick="window.saveDocumentTitles()" class="px-4 py-2.5 bg-[var(--bope-dark)] text-white text-xs font-bold uppercase rounded-xl">Salvar títulos</button>
+                </div>
+
+                <div data-admin-tab="manutencao" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Backup das legislações</h4>
+                    <p class="text-xs text-slate-500">Exporte todo o acervo em JSON antes de alterações estruturais. O backup permite restaurar as leis sem redigitá-las.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="window.exportLegislationBackup()" class="px-4 py-2.5 bg-slate-800 text-white text-xs font-bold rounded-xl">Exportar backup JSON</button>
+                        <label class="px-4 py-2.5 bg-slate-100 text-slate-800 text-xs font-bold rounded-xl cursor-pointer">Importar backup JSON
+                            <input id="legislationImportFile" type="file" accept=".json,application/json" class="hidden" onchange="window.importLegislationBackup(event)">
+                        </label>
+                    </div>
+                </div>
+                <div id="auditPanel" data-admin-tab="auditoria" class="bg-white p-5 rounded-xl border border-amber-200 shadow-sm space-y-3">
+                    <div class="flex flex-wrap justify-between items-start gap-3">
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Área do Corregedor-Geral — Livro de auditoria</h4>
+                            <p class="text-xs text-slate-500 mt-1">Registra alterações administrativas, mudanças no acervo, exclusões, restaurações e movimentações de acesso. Exibe os 100 registros mais recentes.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2"><button onclick="window.refreshAuditLog()" class="px-3 py-2 bg-slate-100 text-slate-700 text-xs font-bold rounded-lg">Atualizar histórico</button><button onclick="window.clearAuditHistory()" class="px-3 py-2 bg-red-700 text-white text-xs font-bold rounded-lg">Zerar histórico de testes</button></div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="window.exportFullBackup()" class="px-3 py-2 bg-amber-700 text-white text-xs font-bold rounded-lg">Exportar backup do acervo + auditoria</button>
+                    </div>
+                    <div id="auditStatus" class="text-xs text-slate-500">Abra esta área para carregar o histórico.</div>
+                    <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                        <table class="w-full text-left text-xs min-w-[620px]">
+                            <thead class="bg-slate-100 text-slate-600 uppercase"><tr><th class="p-3">Data/hora</th><th class="p-3">Responsável</th><th class="p-3">Movimentação</th><th class="p-3">Detalhes</th></tr></thead>
+                            <tbody id="auditTableBody"><tr><td colspan="4" class="p-4 text-slate-400">Nenhum registro carregado.</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div data-admin-tab="usuarios">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Efetivo Cadastrado</h4>
+                            <p class="text-xs text-slate-500">Somente a Corregedoria pode cadastrar militares e corregedores, redefinir senhas e remover acessos. O painel e o livro de auditoria são exclusivos da Corregedoria.</p>
+                        </div>
+                        <button onclick="openAddUserModal()" class="text-xs bg-[var(--bope-accent)] text-white px-4 py-2.5 rounded-xl flex items-center gap-2 hover:bg-blue-600 transition-colors shadow-sm font-bold">
+                            <i class="fas fa-user-plus"></i> Cadastrar militar
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                        <table class="w-full min-w-[620px] text-left text-sm">
+                            <thead class="bg-slate-100 border-b border-slate-200 text-xs uppercase text-slate-600 font-semibold">
+                                <tr>
+                                    <th class="px-4 py-3">QRA / NOME</th>
+                                    <th class="px-4 py-3">Cargo / Função</th>
+                                    <th class="px-4 py-3 text-center">Ações administrativas</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Usuário -->
+    <div id="addUserModal" class="fixed inset-0 bg-[#070b14]/80 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="addUserModalCard">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-900">Cadastrar militar</h3>
+                    <button onclick="closeAddUserModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+                </div>
+                
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">QRA (Nome / Distintivo)</label>
+                        <input type="text" id="newQra" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm outline-none focus:border-[var(--bope-accent)]" placeholder="Ex: Sliker">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Cargo institucional</label>
+                        <select id="newRoleSelect" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm outline-none focus:border-[var(--bope-accent)]">
+                            <option value="Corregedoria">Corregedor</option>
+                            <option value="Corregedor-Geral">Corregedor-Geral</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Senha Inicial</label>
+                        <input type="password" id="newPass" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm outline-none focus:border-[var(--bope-accent)]" placeholder="">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button onclick="closeAddUserModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Cancelar</button>
+                    <button onclick="submitAddUser()" class="px-4 py-2 text-sm bg-[var(--bope-dark)] text-white rounded-xl hover:bg-slate-800 shadow-sm font-bold">Cadastrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Alterar Senha -->
+    <div id="changePassModal" class="fixed inset-0 bg-[#070b14]/80 backdrop-blur-sm z-[80] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="changePassModalCard">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-slate-900">Segurança de Senha</h3>
+                    <button onclick="closeChangePassModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+                </div>
+                <p class="text-xs text-slate-500 mb-4" id="changePassDesc">Defina uma nova senha de acesso.</p>
+                <input type="hidden" id="changePassTargetIndex" value="-1">
+                
+                <div class="space-y-4 mb-6">
+                    <div id="oldPassContainer">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Senha Atual</label>
+                        <input type="password" id="oldPassInput" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm outline-none focus:border-[var(--bope-accent)]" placeholder="">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nova Senha</label>
+                        <input type="password" id="newPassInput" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm outline-none focus:border-[var(--bope-accent)]" placeholder="">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button onclick="closeChangePassModal()" class="px-4 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-xl">Cancelar</button>
+                    <button onclick="submitChangePass()" class="px-4 py-2 text-sm bg-[var(--bope-dark)] text-white rounded-xl hover:bg-slate-800 shadow-sm font-bold">Salvar Senha</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editor Visual de Capítulo -->
+    <div id="chapterEditorModal" class="fixed inset-0 bg-[#070b14]/80 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col transform transition-all duration-300 scale-95 opacity-0 overflow-hidden" id="chapterEditorCard">
+            <div class="px-6 py-4 bg-[var(--bope-dark)] text-white flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-edit text-[var(--bope-silver)]"></i>
+                    <h3 class="text-base font-bold tracking-wide" id="chapterEditorTitle">Editor Visual de Capítulo</h3>
+                </div>
+                <button onclick="closeChapterEditor()" class="text-white/50 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-100 space-y-6">
+                <input type="hidden" id="editChapterIndex" value="-1">
+                
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Título Principal do Capítulo</label>
+                    <input type="text" id="editChapterTitleInput" class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm font-bold uppercase outline-none focus:border-[var(--bope-accent)]" placeholder="Ex: CAPÍTULO II - DOS CRIMES CONTRA A PESSOA">
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Estrutura de Títulos, Seções e Artigos</h4>
+                        <div class="flex gap-2">
+                            <button onclick="addBuilderItem('titulo')" class="px-3 py-1.5 bg-slate-800 text-white text-xs font-semibold rounded-xl hover:bg-slate-700 transition-all flex items-center gap-1 shadow-sm">
+                                <i class="fas fa-heading"></i> + Título
+                            </button>
+                            <button onclick="addBuilderItem('secao')" class="px-3 py-1.5 bg-blue-800 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition-all flex items-center gap-1 shadow-sm">
+                                <i class="fas fa-layer-group"></i> + Seção
+                            </button>
+                            <button onclick="addBuilderItem('artigo')" class="px-3 py-1.5 bg-[var(--bope-accent)] text-white text-xs font-semibold rounded-xl hover:bg-blue-600 transition-all flex items-center gap-1 shadow-sm">
+                                <i class="fas fa-paragraph"></i> + Artigo
+                            </button>
+                            <button onclick="addBuilderItem('spoiler')" class="px-3 py-1.5 bg-emerald-700 text-white text-xs font-semibold rounded-xl hover:bg-emerald-600 transition-all flex items-center gap-1 shadow-sm">
+                                <i class="fas fa-chevron-down"></i> + Spoiler
+                            </button>
+                            <div class="flex gap-1 ml-1 pl-2 border-l border-slate-300" title="Formate o trecho selecionado no campo em edição">
+                                <button type="button" onmousedown="event.preventDefault()" onclick="window.applyBuilderFormatting('bold')" class="w-7 h-7 bg-white border border-slate-300 text-slate-800 text-xs font-bold rounded-lg hover:bg-slate-100 transition-colors" title="Negrito"><b>B</b></button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="window.applyBuilderFormatting('italic')" class="w-7 h-7 bg-white border border-slate-300 text-slate-800 text-xs italic rounded-lg hover:bg-slate-100 transition-colors" title="Itálico"><i>I</i></button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="window.applyBuilderFormatting('underline')" class="w-7 h-7 bg-white border border-slate-300 text-slate-800 text-xs underline rounded-lg hover:bg-slate-100 transition-colors" title="Sublinhado"><u>U</u></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="visualBuilderContainer" class="space-y-4">
+                        <!-- Itens gerados dinamicamente via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-slate-200 bg-white flex justify-between items-center">
+                <button onclick="deleteCurrentChapter()" class="px-4 py-2 text-xs font-bold bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors">Excluir Capítulo Inteiro</button>
+                <div class="flex gap-2">
+                    <button onclick="closeChapterEditor()" class="px-4 py-2 text-sm text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200">Cancelar</button>
+                    <button onclick="saveChapterEdits()" class="px-6 py-2 text-sm font-bold bg-[var(--bope-dark)] text-white rounded-xl hover:bg-slate-800 shadow-md">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MÓDULO JS PRINCIPAL -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, writeBatch, addDoc, getDocs, query, orderBy, limit, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        async function sha256(message) {
+            if (window.crypto && window.crypto.subtle) {
+                try {
+                    const msgBuffer = new TextEncoder().encode(message);
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                } catch (e) {
+                    console.warn("crypto.subtle falhou, usando CryptoJS fallback", e);
+                }
+            }
+            if (window.CryptoJS) {
+                return CryptoJS.SHA256(message).toString(CryptoJS.enc.Hex);
+            }
+            throw new Error("Nenhum método de hash disponível.");
+        }
+
+        // Alterado o appId para não conflitar com o do Exército
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'pc-vademecum-system';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRkN6oGqxDMCw7WnFZ_K1YCe_aEM9UL2w",
+            authDomain: "bope-1ccf7.firebaseapp.com",
+            projectId: "bope-1ccf7",
+            storageBucket: "bope-1ccf7.firebasestorage.app",
+            messagingSenderId: "110946069029",
+            appId: "1:110946069029:web:1baa62244c9b9d1ac16dcc"
+        };
+        
+        let app, db, auth;
+        let unsubscribeDocs = null;
+        let unsubscribeAuth = null;
+        let currentSection = 'codigo_penal';
+        let documentsData = {};
+        let authData = { users: [], logoUrl: '', loginLogoUrl: '', titleOverrides: {} };
+        let currentUserData = null;
+
+
+        function applySignedInUser(user) {
+            if (!user) return;
+            currentUserData = user;
+            const displayRole = normalizeRole(user.role);
+            document.getElementById('sidebarUserQra').innerText = user.username || 'Usuário';
+            document.getElementById('sidebarUserRole').innerText = displayRole.toLocaleUpperCase('pt-BR');
+            document.getElementById('btnSelfPassword')?.classList.remove('hidden');
+            document.getElementById('btnLogout')?.classList.remove('hidden');
+            const isCorr = isCorregedoria(user.role);
+            const isGeneral = isCorregedorGeral(user);
+            document.getElementById('adminBadge')?.classList.toggle('hidden', !isCorr);
+            const badgeText = document.getElementById('adminBadgeText');
+            if (badgeText) badgeText.innerText = isGeneral
+                ? `CORREGEDOR-GERAL ${user.username}`
+                : `CORREGEDOR ${user.username}`;
+            // O acesso ao centro administrativo continua disponível à Corregedoria,
+            // mas a aba Painel Administrativo é exibida exclusivamente ao Corregedor-Geral.
+            document.getElementById('btnAccessCenter')?.classList.toggle('hidden', !isGeneral);
+            document.getElementById('btnCorregedoriaLogin')?.classList.toggle('hidden', isCorr);
+            document.querySelectorAll('[data-general-only]').forEach(el => {
+                el.classList.toggle('hidden', !isGeneral);
+            });
+            document.getElementById('mandatoryAuthOverlay')?.classList.add('hidden');
+        }
+
+        // Normaliza variações antigas de escrita sem rebaixar o Corregedor-Geral.
+        function normalizeRole(role) {
+            const value = String(role || '').trim().toLocaleLowerCase('pt-BR')
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[\s_]+/g, '-').replace(/-+/g, '-');
+            // Aceita grafias antigas e variações com sufixos sem rebaixar o cargo.
+            if (['corregedor-geral', 'corregedor-geral-bope', 'corregedoria-geral', 'corregedor-geral-do-bope', 'corregedor geral', 'corregedoria geral'].includes(value)) return 'Corregedor-Geral';
+            if (value === 'corregedoria' || value === 'corregedor' || value === 'corregedor-bope') return 'Corregedoria';
+            // O regulamento só mantém contas da Corregedoria; cargos desconhecidos viram Corregedor.
+            return 'Corregedoria';
+        }
+        const isCorregedoria = role => ['Corregedoria', 'Corregedor-Geral'].includes(normalizeRole(role));
+        const isCorregedorGeral = user => !!user && normalizeRole(user.role) === 'Corregedor-Geral';
+        // Ambos os cargos podem administrar o acervo; somente o Corregedor-Geral acessa a aba exclusiva.
+        const isAdminRole = role => isCorregedoria(role);
+        const AUDIT_COLLECTION = 'bope_audit_logs';
+        const publicDataPath = ['artifacts', appId, 'public', 'data'];
+
+        // Autenticação e operações de contas passam pelo backend Netlify; senhas nunca são lidas/gravad​as no navegador.
+        const BOPE_API = '/.netlify/functions/bope-auth';
+        async function bopeApi(action, payload = {}, authenticated = false) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (authenticated) {
+                if (!auth?.currentUser) throw new Error('Faça login novamente para continuar.');
+                headers.Authorization = `Bearer ${await auth.currentUser.getIdToken(true)}`;
+            }
+            const response = await fetch(BOPE_API, { method: 'POST', headers, body: JSON.stringify({ action, ...payload }) });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || `Falha na operação (${response.status}).`);
+            return data;
+        }
+
+        async function refreshServerUsers() {
+            if (!currentUserData) { authData.users = []; return; }
+            const result = await bopeApi('list-users', {}, true);
+            authData.users = (result.users || []).map(u => ({ ...u, username: u.username || '', role: normalizeRole(u.role) }));
+            renderUsersTable();
+            const firstSetup = document.getElementById('btnFirstCorregedorSetup');
+            if (firstSetup) firstSetup.classList.add('hidden');
+        }
+
+        async function recordAudit(action, details = '') {
+            try {
+                if (!db) return;
+                const actor = currentUserData?.username || 'Acesso público / não autenticado';
+                const role = currentUserData?.role || 'Sem acesso administrativo';
+                await addDoc(collection(db, ...publicDataPath, AUDIT_COLLECTION), {
+                    actor, role, action: String(action).slice(0, 160),
+                    details: String(details).slice(0, 1200),
+                    createdAt: new Date().toISOString(),
+                    firebaseUid: auth?.currentUser?.uid || null
+                });
+            } catch (err) {
+                console.error('Não foi possível registrar a auditoria:', err);
+            }
+        }
+
+        function escapeAuditText(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
+        const SECTIONS = [
+            { id: 'codigo_penal', title: 'Código Penal Militar', icon: 'fa-scale-balanced', children: [
+                { id: 'cpm_anexo_ii_exoneracao', title: 'Política de Exoneração - Anexo II' },
+                { id: 'cpm_anexo_i_punicoes', title: 'Punições - Anexo I' }
+            ] },
+            { id: 'codigo_processo_penal', title: 'Código de Conduta Militar', icon: 'fa-book-open', children: [
+                { id: 'ccm_disposicoes_complementares', title: 'Disposições complementares' },
+                { id: 'ccm_anexo_i_baixa_aposentadoria', title: 'Política de Baixa, aposentadoria e reintegração - Anexo I' },
+                { id: 'ccm_anexo_i_nicknames', title: 'Normas para nicknames, emblemas, missões e fardas - Anexo I' }
+            ] },
+            { id: 'procedimentos_policiais', title: 'Plano de Controle Emergencial (PCE)', icon: 'fa-list-check' }
+        ];
+
+        const SUBSECTION_SEEDS = {
+            cpm_anexo_ii_exoneracao: 'Política de Exoneração - Anexo II',
+            cpm_anexo_i_punicoes: 'Punições - Anexo I',
+            ccm_disposicoes_complementares: 'Disposições complementares',
+            ccm_anexo_i_baixa_aposentadoria: 'Política de Baixa, aposentadoria e reintegração - Anexo I',
+            ccm_anexo_i_nicknames: 'Normas para nicknames, emblemas, missões e fardas - Anexo I'
+        };
+
+        const SEED_DOCS = {
+            codigo_penal: {
+                title: "Código Penal do Batalhão de Operações Especiais",
+                chapters: [
+                    {
+                        title: "CAPÍTULO I - DOS CRIMES CONTRA A PESSOA",
+                        items: [
+                            { type: 'titulo', text: 'TÍTULO I - DOS CRIMES CONTRA A VIDA' },
+                            { type: 'secao', text: 'Seção I - Homicídio' },
+                            { 
+                                type: 'artigo', 
+                                number: 'Art. 121.', 
+                                content: 'Matar alguém:', 
+                                subItems: [
+                                    { type: 'inciso', text: 'Pena - reclusão, de 60 a 120 meses.' },
+                                    { type: 'paragrafo_unico', text: '§ 1º Se o agente comete o crime impelido por motivo de relevante valor social ou moral, o juiz pode reduzir a pena.' },
+                                    { type: 'exemplo', text: 'Ex: Disparo fatal contra vítima em assalto.' }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        title: "CAPÍTULO II - DOS CRIMES CONTRA O PATRIMÔNIO",
+                        items: [
+                            { 
+                                type: 'artigo', 
+                                number: 'Art. 155.', 
+                                content: 'Subtrair, para si ou para outrem, coisa alheia móvel (Furto).', 
+                                subItems: [
+                                    { type: 'inciso', text: 'Pena - reclusão, de 15 a 45 meses.' }
+                                ]
+                            },
+                            { 
+                                type: 'artigo', 
+                                number: 'Art. 157.', 
+                                content: 'Subtrair coisa móvel alheia, para si ou para outrem, mediante grave ameaça ou violência a pessoa (Roubo).', 
+                                subItems: [
+                                    { type: 'inciso', text: 'Pena - reclusão, de 40 a 90 meses, e multa.' }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            codigo_processo_penal: {
+                title: "Código de Conduta Militar (CPM)",
+                chapters: [
+                    {
+                        title: "CAPÍTULO I - DA PRISÃO EM FLAGRANTE",
+                        items: [
+                            { 
+                                type: 'artigo', 
+                                number: 'Art. 301.', 
+                                content: 'Qualquer do povo poderá e as autoridades policiais e seus agentes deverão prender quem quer que seja encontrado em flagrante delito.', 
+                                subItems: []
+                            }
+                        ]
+                    }
+                ]
+            },
+            procedimentos_policiais: {
+                title: "Plano de Controle Emergencial",
+                chapters: [
+                    {
+                        title: "CAPÍTULO I - ABORDAGEM E REVISTA",
+                        items: [
+                            { 
+                                type: 'artigo', 
+                                number: 'Art. 1º', 
+                                content: 'A abordagem policial deve ser pautada na legalidade, necessidade e proporcionalidade. Deve sempre garantir a segurança do agente e do abordado.', 
+                                subItems: [
+                                    { type: 'inciso', text: 'I - Verbalização clara: "Polícia! Mãos na cabeça!".' }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // Documentos independentes para os anexos e disposições complementares.
+        Object.entries(SUBSECTION_SEEDS).forEach(([id, title]) => {
+            SEED_DOCS[id] = { title, chapters: [] };
+        });
+
+        async function initApp() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // A consulta pública não exige login. A autenticação BOPE só é iniciada após QRA/senha.
+                setupListeners();
+                currentUserData = null;
+                document.getElementById('sidebarUserQra').innerText = 'Regulamento - B.O.P.E';
+                document.getElementById('sidebarUserRole').innerText = 'Consulta pública';
+                document.getElementById('btnSelfPassword')?.classList.add('hidden');
+                document.getElementById('btnLogout')?.classList.add('hidden');
+                document.getElementById('mandatoryAuthOverlay')?.classList.add('hidden');
+                renderNav();
+                renderDocument();
+            } catch (error) {
+                console.error("Init error:", error);
+            }
+        }
+
+        async function setupListeners() {
+            const docsRef = collection(db, 'artifacts', appId, 'public', 'data', 'pc_vademecum_docs');
+            unsubscribeDocs = onSnapshot(docsRef, async (snapshot) => {
+                try {
+                    if (snapshot.empty) {
+                        // Não semeia automaticamente o banco novo: evita sobrescrever/importar conteúdo sem decisão explícita.
+                        documentsData = {};
+                        renderDocument();
+                        return;
+                    }
+                    documentsData = {};
+                    snapshot.forEach(docSnap => { documentsData[docSnap.id] = normalizeViceCityText(docSnap.data()); });
+                    for (const [newDocId, newDocData] of Object.entries(SUBSECTION_SEEDS)) {
+                        if (!snapshot.docs.some(existing => existing.id === newDocId)) {
+                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'pc_vademecum_docs', newDocId), { title: newDocData, chapters: [] });
+                        }
+                    }
+                    const titleOverrides = authData.titleOverrides || {};
+                    if (documentsData.codigo_penal) documentsData.codigo_penal.title = titleOverrides.codigo_penal_doc || documentsData.codigo_penal.title;
+                    if (documentsData.codigo_processo_penal) documentsData.codigo_processo_penal.title = titleOverrides.codigo_processo_penal_doc || documentsData.codigo_processo_penal.title;
+                    if (documentsData.procedimentos_policiais) documentsData.procedimentos_policiais.title = titleOverrides.procedimentos_policiais_doc || documentsData.procedimentos_policiais.title;
+                    SECTIONS.forEach(sec => { if (titleOverrides[sec.id + '_menu']) sec.title = titleOverrides[sec.id + '_menu']; });
+                    renderDocument();
+                } catch (error) { console.error('Erro ao carregar documentos do Firestore:', error); }
+            }, error => console.error('Erro no Listener Docs:', error));
+
+            try {
+                const status = await bopeApi('status');
+                authData = { users: [], ...(status.siteConfig || {}) };
+                applySiteLogo();
+                const firstSetup = document.getElementById('btnFirstCorregedorSetup');
+                if (firstSetup) firstSetup.classList.toggle('hidden', !!status.configured);
+                const notice = document.getElementById('loginAccessNotice');
+                if (notice) notice.textContent = status.configured ? 'Acesso restrito a QRA previamente cadastrado pela Corregedoria.' : 'Configuração inicial necessária: ainda não há uma conta da Corregedoria cadastrada.';
+                const loginBtn = document.getElementById('btnLoginSubmit');
+                if (loginBtn) { loginBtn.disabled = false; loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> ENTRAR'; loginBtn.classList.remove('opacity-50', 'cursor-not-allowed'); }
+            } catch (error) {
+                console.error('Falha ao consultar o backend BOPE:', error);
+                const notice = document.getElementById('loginAccessNotice');
+                if (notice) notice.textContent = 'Não foi possível conectar ao serviço de autenticação. Verifique se a versão de teste foi publicada com as funções Netlify.';
+            }
+        }
+
+        async function seedInitialDocs() {
+            const batch = writeBatch(db);
+            for (const [key, data] of Object.entries(SEED_DOCS)) {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'pc_vademecum_docs', key);
+                batch.set(docRef, data);
+            }
+            await batch.commit();
+        }
+
+        async function saveCurrentDocument() {
+            if (!currentUserData || !isAdminRole(currentUserData.role)) return;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'pc_vademecum_docs', currentSection);
+            await setDoc(docRef, documentsData[currentSection] || { chapters: [] }, { merge: true });
+            await recordAudit('Acervo alterado', `Documento/seção: ${currentSection}`);
+        }
+
+        async function saveAuthData() {
+            if (!currentUserData) throw new Error('É necessário entrar como Corregedoria para salvar configurações.');
+            await bopeApi('save-site-config', { logoUrl: authData.logoUrl || '', loginLogoUrl: authData.loginLogoUrl || '', titleOverrides: authData.titleOverrides || {} }, true);
+        }
+
+        function handleLogoError(img, iconClass) {
+            img.onerror = null;
+            img.parentElement.innerHTML = `<i class="fas fa-shield-halved ${iconClass} text-[var(--bope-silver)]"></i>`;
+        }
+
+        function applySiteLogo() {
+            const logoUrl = (authData.logoUrl || '').trim();
+            const loginLogoUrl = (authData.loginLogoUrl || '').trim();
+            const loginLogoInput = document.getElementById('loginPanelLogoInput');
+            if (loginLogoInput && document.activeElement !== loginLogoInput) loginLogoInput.value = loginLogoUrl;
+            const siteLogoInput = document.getElementById('siteLogoInput');
+            if (siteLogoInput && document.activeElement !== siteLogoInput) siteLogoInput.value = logoUrl;
+
+            const sidebarContainer = document.getElementById('sidebarLogoContainer');
+            if (sidebarContainer) {
+                if (logoUrl) {
+                    sidebarContainer.innerHTML = `<img src="${logoUrl}" class="w-full h-full object-cover" alt="Brasão do BOPE" onerror="handleLogoError(this, 'text-5xl')">`;
+                } else {
+                    sidebarContainer.innerHTML = `<i class="fas fa-shield-halved text-5xl text-[var(--bope-silver)]"></i>`;
+                }
+            }
+
+            const loginContainer = document.getElementById('loginPanelLogo');
+            if (loginContainer) {
+                if (loginLogoUrl) {
+                    loginContainer.innerHTML = `<img src="${loginLogoUrl}" class="w-full h-full object-cover" alt="Foto do painel de login" onerror="handleLogoError(this, 'text-4xl')">`;
+                } else {
+                    loginContainer.innerHTML = `<i class="fas fa-shield-halved text-4xl text-[var(--bope-silver)]"></i>`;
+                }
+            }
+        }
+
+        // Normaliza textos antigos que ainda possam estar gravados como "Meta City".
+        function normalizeViceCityText(value) {
+            if (typeof value === 'string') {
+                return value
+                    .replace(/Pol[ií]cia Civil/gi, 'Batalhão de Operações Especiais')
+                    .replace(/Vice City/gi, 'Brasil RP')
+                    .replace(/Código de Processo Penal\s*\(CPP\)/gi, 'Código de Conduta Militar')
+                    .replace(/Código de Processo Penal/gi, 'Código de Conduta Militar')
+                    .replace(/Código de Conduta Militar\s*\(CPM\)/gi, 'Código de Conduta Militar');
+            }
+            if (Array.isArray(value)) return value.map(normalizeViceCityText);
+            if (value && typeof value === 'object') {
+                const normalized = {};
+                Object.entries(value).forEach(([key, val]) => { normalized[key] = normalizeViceCityText(val); });
+                return normalized;
+            }
+            return value;
+        }
+
+        window.toggleSidebar = function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0');
+                setTimeout(() => overlay.classList.add('hidden'), 300);
+            }
+        }
+
+        const expandedNavSections = new Set();
+
+        function renderNav() {
+            const navMenu = document.getElementById('navMenu');
+            if (!navMenu) return;
+            let html = '';
+            SECTIONS.forEach(sec => {
+                const titleMap = authData.titleOverrides || {};
+                const isActive = sec.id === currentSection;
+                const childActive = (sec.children || []).some(child => child.id === currentSection);
+                const shownTitle = titleMap[sec.id + '_menu'] || sec.title;
+                const isExpanded = expandedNavSections.has(sec.id) || childActive;
+                html += `
+                    <li class="mb-2">
+                        <div class="flex items-stretch gap-1">
+                            <button onclick="window.switchSection('${sec.id}')" class="flex-1 min-w-0 text-left px-4 py-3 rounded-xl text-sm flex items-center gap-3 transition-colors ${isActive ? 'bg-blue-900/50 text-white font-semibold border-l-4 border-[var(--bope-accent)]' : 'text-slate-200 hover:text-white hover:bg-white/5'}">
+                                <i class="fas ${sec.icon} text-[var(--bope-silver)] text-sm w-4 text-center shrink-0"></i>
+                                <span class="tracking-wide flex-1">${shownTitle}<span class="block mt-1 text-[10px] uppercase tracking-wider font-normal ${isActive ? 'text-blue-200' : 'text-slate-500'}">Documento principal</span></span>
+                            </button>
+                            ${sec.children ? `<button aria-label="${isExpanded ? 'Ocultar' : 'Mostrar'} anexos de ${shownTitle}" title="${isExpanded ? 'Ocultar anexos' : 'Mostrar anexos'}" onclick="window.toggleNavChildren('${sec.id}')" class="w-8 shrink-0 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors"><i class="fas fa-chevron-down text-[11px] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}"></i></button>` : ''}
+                        </div>
+                        ${sec.children ? `<div class="${isExpanded ? '' : 'hidden'} mt-2 ml-4 pl-3 border-l-2 border-slate-700/80"><div class="px-2 pb-1 text-[10px] uppercase tracking-widest text-slate-500">Anexos e documentos complementares</div><ul class="space-y-1">${sec.children.map(child => {
+                            const activeChild = child.id === currentSection;
+                            return `<li><button onclick="window.switchSection('${child.id}')" class="w-full text-left px-3 py-2.5 rounded-lg text-xs leading-relaxed transition-colors ${activeChild ? 'bg-blue-900/50 text-white border-l-2 border-[var(--bope-accent)] font-medium' : 'text-slate-400 hover:text-white hover:bg-white/5'}"><i class="fas fa-file-lines mr-2 opacity-70"></i>${child.title}</button></li>`;
+                        }).join('')}</ul></div>` : ''}
+                    </li>
+                `;
+            });
+            navMenu.innerHTML = html;
+        }
+
+        window.toggleNavChildren = function(id) {
+            if (expandedNavSections.has(id)) expandedNavSections.delete(id);
+            else expandedNavSections.add(id);
+            renderNav();
+        }
+
+        window.switchSection = function(id) {
+            currentSection = id;
+            renderNav();
+            toggleSidebar();
+            renderDocument();
+        }
+
+        function ensureSubItems(item) {
+            if (!item.subItems) {
+                item.subItems = [];
+                if (item.incisos && Array.isArray(item.incisos)) {
+                    item.incisos.forEach(inc => item.subItems.push({ type: 'inciso', text: inc }));
+                }
+                if (item.examples && Array.isArray(item.examples)) {
+                    item.examples.forEach(ex => item.subItems.push({ type: 'exemplo', text: ex }));
+                }
+            }
+            return item.subItems;
+        }
+
+        function renderDocument() {
+            const container = document.getElementById('documentContainer');
+            const headerTitle = document.getElementById('headerTitle');
+            const data = documentsData[currentSection];
+            const isHighRank = currentUserData && isAdminRole(currentUserData.role);
+
+            const activeSec = SECTIONS.find(s => s.id === currentSection);
+            if (headerTitle && activeSec) {
+                headerTitle.innerText = (data && data.title) || activeSec.title;
+            }
+
+            if (!container) return;
+
+            if (!data) {
+                container.innerHTML = `<div class="text-center text-gray-500 py-16 bg-white rounded-2xl border border-gray-200 shadow-sm">Carregando acervo policial...</div>`;
+                return;
+            }
+
+            let html = `
+                <div class="bg-white shadow-xl border border-gray-200/80 mx-auto rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-10 lg:p-12 relative min-w-0 break-words">
+                    <div class="text-center border-b border-gray-200/80 pb-8 mb-10 bg-gradient-to-b from-slate-50 to-white -mx-6 md:-mx-10 lg:-mx-12 -mt-6 md:-mt-10 lg:-mt-12 p-8 md:p-12 rounded-t-2xl md:rounded-t-3xl">
+                        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 bg-slate-900/5 text-slate-800 rounded-full text-xs font-bold uppercase tracking-widest mb-3">
+                            <i class="fas fa-building-shield text-[var(--bope-accent)] text-xs"></i> BOPE • Brasil RP
+                        </div>
+                        <h1 class="text-2xl md:text-4xl font-extrabold text-slate-900 uppercase tracking-wider legal-document">${data.title || 'Manuais'}</h1>
+                    </div>
+            `;
+
+            if (data.chapters && data.chapters.length > 0) {
+                data.chapters.forEach((chapter, cIndex) => {
+                    html += `
+                        <div class="mb-10 bg-slate-50/60 rounded-2xl p-5 md:p-7 border border-slate-200/80 shadow-sm">
+                            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 bg-gradient-to-r from-[var(--bope-dark)] to-[var(--bope-darker)] text-white p-4 md:p-5 rounded-xl shadow-sm border border-slate-700/50">
+                                <h2 class="law-capitulo legal-document m-0 !text-lg md:!text-xl !text-white !mb-0 flex items-center gap-2">
+                                    <i class="fas fa-bookmark text-[var(--bope-silver)] text-sm"></i>
+                                    ${chapter.title}
+                                </h2>
+                                ${isHighRank ? `
+                                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                        <button onclick="window.moveChapter(${cIndex}, -1)" ${cIndex === 0 ? 'disabled' : ''} title="Mover capítulo completo para cima" class="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs rounded-lg border border-white/20 ${cIndex === 0 ? 'opacity-30 cursor-not-allowed' : ''}"><i class="fas fa-arrow-up"></i></button>
+                                        <button onclick="window.moveChapter(${cIndex}, 1)" ${cIndex === data.chapters.length - 1 ? 'disabled' : ''} title="Mover capítulo completo para baixo" class="px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs rounded-lg border border-white/20 ${cIndex === data.chapters.length - 1 ? 'opacity-30 cursor-not-allowed' : ''}"><i class="fas fa-arrow-down"></i></button>
+                                        <button onclick="window.openChapterEditor(${cIndex})" class="shrink-0 px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg border border-white/20 transition-all flex items-center gap-1.5 backdrop-blur-sm">
+                                            <i class="fas fa-pen text-[var(--bope-silver)]"></i> Editar Capítulo
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                    `;
+
+                    if (chapter.items && chapter.items.length > 0) {
+                        html += `<div class="space-y-4">`;
+                        chapter.items.forEach(item => {
+                            if (item.type === 'titulo') {
+                                html += `
+                                    <div class="mt-4 mb-2">
+                                        <h3 class="law-titulo bg-slate-200/70 py-2.5 px-4 rounded-xl text-slate-800 text-sm md:text-base border border-slate-300/60">${item.text}</h3>
+                                    </div>
+                                `;
+                            } else if (item.type === 'secao') {
+                                html += `
+                                    <div class="mt-3 mb-2">
+                                        <h4 class="law-secao rounded-r-xl bg-white py-2 px-4 shadow-sm border-slate-300">${item.text}</h4>
+                                    </div>
+                                `;
+                            } else if (item.type === 'spoiler') {
+                                html += `
+                                    <details class="document-spoiler bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                                        <summary class="px-4 py-3 bg-slate-200/80 text-slate-900 font-bold text-sm">${item.title || 'Spoiler'}</summary>
+                                        <div class="px-4 py-4 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]">${item.content || ''}</div>
+                                    </details>
+                                `;
+                            } else if (item.type === 'artigo') {
+                                const subItems = ensureSubItems(item);
+
+                                html += `
+                                    <div class="w-full bg-white rounded-2xl p-5 md:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-blue-300/80 flex flex-col justify-between">
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-slate-100">
+                                                <span class="px-3 py-1 bg-slate-100 text-slate-800 rounded-lg font-black text-xs border border-slate-200 tracking-wider">${item.number || 'Art.'}</span>
+                                            </div>
+                                            <p class="text-sm md:text-base text-slate-800 leading-relaxed font-normal mb-3 break-words [overflow-wrap:anywhere]">
+                                                ${item.content || item.text || ''}
+                                            </p>
+                                `;
+
+                                if (subItems && subItems.length > 0) {
+                                    html += `<div class="space-y-2 mt-3">`;
+                                    let alineaIndex = 0;
+                                    subItems.forEach(sub => {
+                                        if (sub.type === 'alinea') {
+                                            const letter = String.fromCharCode(97 + (alineaIndex % 26));
+                                            alineaIndex++;
+                                            const rawText = String(sub.text || '').replace(/^\s*[a-z]\)\s*/i, '');
+                                            html += `<div class="rounded-xl px-4 py-2 text-slate-700 text-xs md:text-sm flex items-start gap-2"><strong class="shrink-0">${letter})</strong><span>${rawText}</span></div>`;
+                                        } else if (sub.type !== 'alinea') {
+                                            alineaIndex = 0;
+                                        }
+                                        if (sub.type === 'inciso') {
+                                            html += `
+                                                <div class="bg-slate-50 rounded-xl p-3 text-slate-700 text-xs md:text-sm border border-slate-100 flex items-start">
+                                                    <span>${sub.text}</span>
+                                                </div>
+                                            `;
+                                        } else if (sub.type === 'paragrafo') {
+                                            html += `
+                                                <div class="bg-blue-50/40 rounded-xl p-3.5 text-blue-900 text-xs md:text-sm border border-blue-100 flex items-start gap-2.5">
+                                                    <i class="fas fa-paragraph text-[var(--bope-accent)] mt-1 shrink-0"></i>
+                                                    <span>${sub.text.startsWith('§') ? sub.text : '§ ' + sub.text}</span>
+                                                </div>
+                                            `;
+                                        } else if (sub.type === 'paragrafo_unico') {
+                                            html += `
+                                                <div class="bg-blue-50/60 rounded-xl p-3.5 text-blue-900 text-xs md:text-sm border border-blue-100 font-medium italic flex items-start gap-2.5">
+                                                    <i class="fas fa-paragraph text-[var(--bope-accent)] mt-1 shrink-0"></i>
+                                                    <span>${sub.text.startsWith('Parágrafo') || sub.text.startsWith('§') ? sub.text : 'Parágrafo único. ' + sub.text}</span>
+                                                </div>
+                                            `;
+                                        } else if (sub.type === 'exemplo') {
+                                            html += `
+                                                <div class="bg-amber-50/50 rounded-xl p-3 text-slate-600 text-xs md:text-sm italic border border-amber-200/50 flex items-start gap-2.5">
+                                                    <i class="fas fa-info-circle text-[11px] text-amber-600 mt-0.5 shrink-0"></i>
+                                                    <span>${sub.text}</span>
+                                                </div>
+                                            `;
+                                        }
+                                    });
+                                    html += `</div>`;
+                                }
+
+                                html += `
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        });
+                        html += `</div>`;
+                    }
+                    html += `</div>`;
+                });
+            } else {
+                html += `<div class="text-center text-slate-400 py-16 italic bg-slate-50 rounded-2xl border border-slate-200">Nenhum capítulo catalogado neste manual.</div>`;
+            }
+
+            if (isHighRank) {
+                html += `
+                    <div class="text-center pt-8 border-t border-slate-200 mt-6">
+                        <button onclick="window.openChapterEditor(-1)" class="px-6 py-3 bg-[var(--bope-dark)] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-md hover:bg-[var(--bope-darker)] transition-all inline-flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Adicionar Novo Capítulo
+                        </button>
+                    </div>
+                `;
+            }
+            
+            html += `</div>`;
+
+            container.innerHTML = html;
+        }
+
+        let toastTimeout;
+        window.showLoginErrorToast = function() {
+            const toast = document.getElementById('loginErrorToast');
+            toast.classList.remove('translate-x-[150%]');
+            toast.classList.add('translate-x-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => { window.hideLoginErrorToast(); }, 5000);
+        }
+
+        window.hideLoginErrorToast = function() {
+            const toast = document.getElementById('loginErrorToast');
+            toast.classList.remove('translate-x-0');
+            toast.classList.add('translate-x-[150%]');
+        }
+
+        window.setupFirstCorregedor = async function() {
+            try {
+                const status = await bopeApi('status');
+                if (status.configured) { showMsg('Configuração indisponível', 'A configuração inicial já foi concluída. Solicite acesso a um Corregedor.', 'warning'); return; }
+                const setupKey = window.prompt('Informe a chave temporária de configuração fornecida pelo responsável técnico:') || '';
+                if (!setupKey) return;
+                const qra = (window.prompt('Informe o QRA/nome do primeiro Corregedor-Geral:') || '').trim();
+                if (!qra) return;
+                const password = window.prompt('Crie a senha inicial (mínimo 12 caracteres):') || '';
+                if (password.length < 12) { showMsg('Senha inválida', 'A senha inicial precisa ter pelo menos 12 caracteres.', 'error'); return; }
+                const confirm = window.prompt('Confirme a senha inicial:') || '';
+                if (confirm !== password) { showMsg('Senhas diferentes', 'As senhas informadas não coincidem.', 'error'); return; }
+                await bopeApi('bootstrap', { setupKey, qra, password });
+                document.getElementById('mandatoryQra').value = qra;
+                document.getElementById('mandatoryPass').value = password;
+                await window.submitMandatoryLogin();
+            } catch (err) {
+                console.error('Falha na configuração inicial:', err);
+                showMsg('Erro na configuração inicial', err.message || 'Não foi possível configurar a primeira conta.', 'error');
+            }
+        };
+
+        window.recoverGeneralRole = async function() {
+            showMsg('Recuperação restrita', 'A promoção para Corregedor-Geral não pode ser feita no navegador. Para proteger os cargos, essa recuperação precisa ser autorizada pelo backend.', 'warning');
+        };
+
+        window.openCorregedoriaLogin = function() {
+            const overlay = document.getElementById('mandatoryAuthOverlay');
+            if (overlay) overlay.classList.remove('hidden');
+            const qra = document.getElementById('mandatoryQra');
+            if (qra) qra.focus();
+        };
+
+        window.submitMandatoryLogin = async function() {
+            try {
+                const qra = document.getElementById('mandatoryQra').value.trim();
+                const pass = document.getElementById('mandatoryPass').value;
+                if (!qra || !pass) {
+                    document.getElementById('loginErrorToastMessage').innerText = 'Preencha o QRA e a Senha.';
+                    triggerLoginError(); window.showLoginErrorToast(); return;
+                }
+                const result = await bopeApi('login', { qra, password: pass });
+                await signInWithCustomToken(auth, result.token);
+                currentUserData = { ...result.user, role: normalizeRole(result.user.role) };
+                await refreshServerUsers();
+                applySignedInUser(currentUserData);
+                try { localStorage.setItem('bope_corregedoria_session', currentUserData.username); } catch (_) {}
+                window.hideLoginErrorToast();
+                document.getElementById('sidebarUserQra').innerText = currentUserData.username;
+                document.getElementById('sidebarUserRole').innerText = currentUserData.role;
+                document.getElementById('btnSelfPassword')?.classList.remove('hidden');
+                document.getElementById('btnLogout')?.classList.remove('hidden');
+                const badgeText = document.getElementById('adminBadgeText');
+                const adminBadge = document.getElementById('adminBadge');
+                const isHigh = isCorregedoria(currentUserData.role);
+                if (adminBadge) adminBadge.classList.toggle('hidden', !isHigh);
+                if (badgeText) badgeText.innerText = isCorregedorGeral(currentUserData) ? `CORREGEDOR-GERAL ${currentUserData.username}` : `CORREGEDOR ${currentUserData.username}`;
+                document.getElementById('btnAccessCenter')?.classList.toggle('hidden', !isCorregedorGeral(currentUserData));
+                document.getElementById('btnCorregedoriaLogin')?.classList.toggle('hidden', isHigh);
+                document.getElementById('mandatoryAuthOverlay')?.classList.add('hidden');
+                await recordAudit('Sessão iniciada', `Perfil: ${currentUserData.role}`);
+                renderDocument();
+            } catch (error) {
+                console.error('Erro ao autenticar:', error);
+                document.getElementById('loginErrorToastMessage').innerText = error.message || 'QRA ou senha incorretos.';
+                triggerLoginError(); window.showLoginErrorToast();
+            }
+        };
+
+        function triggerLoginError() {
+            const card = document.getElementById('mandatoryLoginCard');
+            if (card) {
+                card.classList.remove('shake-anim');
+                void card.offsetWidth;
+                card.classList.add('shake-anim');
+            }
+        }
+
+        window.logoutSession = async function() {
+            if (currentUserData) await recordAudit('Sessão encerrada', 'O usuário encerrou a sessão administrativa.');
+            currentUserData = null;
+            try { await signOut(auth); } catch (_) {}
+            authData.users = [];
+            try { localStorage.removeItem('bope_corregedoria_session'); } catch (_) {}
+            document.getElementById('sidebarUserQra').innerText = 'Regulamento - B.O.P.E';
+            document.getElementById('sidebarUserRole').innerText = 'Consulta pública';
+            document.getElementById('btnSelfPassword')?.classList.add('hidden');
+            document.getElementById('btnLogout')?.classList.add('hidden');
+            document.getElementById('adminBadge').classList.add('hidden');
+            document.getElementById('btnAccessCenter').classList.add('hidden');
+            document.getElementById('mandatoryAuthOverlay')?.classList.add('hidden');
+            document.getElementById('btnCorregedoriaLogin')?.classList.remove('hidden');
+            closeAccessCenter();
+            renderDocument();
+        }
+
+        let currentEditingItems = [];
+
+        window.moveChapter = async function(index, direction) {
+            if (!currentUserData || !isAdminRole(currentUserData.role)) return;
+            const chapters = documentsData[currentSection]?.chapters;
+            if (!Array.isArray(chapters)) return;
+            const target = index + direction;
+            if (target < 0 || target >= chapters.length) return;
+            const chapter = chapters[index];
+            chapters[index] = chapters[target];
+            chapters[target] = chapter;
+            await saveCurrentDocument();
+            await recordAudit('Capítulos reordenados', `Seção: ${currentSection}; capítulo movido para ${target + 1}`);
+            renderDocument();
+        };
+
+        window.openChapterEditor = function(cIndex) {
+            if (!currentUserData || !isAdminRole(currentUserData.role)) return;
+            
+            document.getElementById('editChapterIndex').value = cIndex;
+            const titleInput = document.getElementById('editChapterTitleInput');
+
+            if (cIndex >= 0) {
+                const chapter = documentsData[currentSection].chapters[cIndex];
+                titleInput.value = chapter.title;
+                currentEditingItems = JSON.parse(JSON.stringify(chapter.items || []));
+                currentEditingItems.forEach(item => {
+                    if (item.type === 'artigo') ensureSubItems(item);
+                });
+                document.getElementById('chapterEditorTitle').innerText = "Editor Visual de Capítulo";
+            } else {
+                titleInput.value = "CAPÍTULO X - NOVO CAPÍTULO";
+                currentEditingItems = [
+                    { type: "titulo", text: "TÍTULO I - EXEMPLO" },
+                    { type: "secao", text: "Seção I - Exemplo" },
+                    { 
+                        type: "artigo", 
+                        number: "Art. 1º", 
+                        content: "Escreva o texto aqui...", 
+                        subItems: [
+                            { type: "inciso", text: "I - Inciso 1" },
+                            { type: "paragrafo_unico", text: "Parágrafo único. Exemplo de texto." }
+                        ] 
+                    }
+                ];
+                document.getElementById('chapterEditorTitle').innerText = "Criar Novo Capítulo";
+            }
+
+            renderVisualBuilder();
+
+            const modal = document.getElementById('chapterEditorModal');
+            const card = document.getElementById('chapterEditorCard');
+            modal.classList.remove('hidden');
+            setTimeout(() => card.classList.remove('scale-95', 'opacity-0'), 10);
+        }
+
+        window.closeChapterEditor = function() {
+            const modal = document.getElementById('chapterEditorModal');
+            const card = document.getElementById('chapterEditorCard');
+            card.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        window.addBuilderItem = function(type) {
+            syncVisualBuilderToState();
+            if (type === 'titulo') {
+                currentEditingItems.push({ type: 'titulo', text: 'TÍTULO NOVO' });
+            } else if (type === 'secao') {
+                currentEditingItems.push({ type: 'secao', text: 'Seção Nova' });
+            } else if (type === 'artigo') {
+                currentEditingItems.push({ type: 'artigo', number: 'Art. Xº', content: 'Descrição do artigo...', subItems: [] });
+            } else if (type === 'spoiler') {
+                currentEditingItems.push({ type: 'spoiler', title: 'Novo spoiler', content: 'Adicione aqui o conteúdo que aparecerá ao abrir o spoiler.' });
+            }
+            renderVisualBuilder();
+        }
+
+        window.removeBuilderItem = function(index) {
+            showMsg('Segurança', 'Confirma a exclusão deste bloco? Esta ação só será aplicada após sua confirmação.', 'warning', () => {
+                syncVisualBuilderToState();
+                currentEditingItems.splice(index, 1);
+                renderVisualBuilder();
+            });
+        }
+
+        window.moveBuilderItem = function(index, direction) {
+            syncVisualBuilderToState();
+            const target = index + direction;
+            if (target < 0 || target >= currentEditingItems.length) return;
+            const temp = currentEditingItems[index];
+            currentEditingItems[index] = currentEditingItems[target];
+            currentEditingItems[target] = temp;
+            renderVisualBuilder();
+        }
+
+        window.applyBuilderFormatting = function(format) {
+            const field = document.activeElement;
+            if (!field || !(field.matches('.item-text-input, .art-number-input, .art-content-input, .subitem-input'))) return;
+
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            if (start === null || end === null || start === end) return;
+
+            const tags = {
+                bold: ['<strong>', '</strong>'],
+                italic: ['<em>', '</em>'],
+                underline: ['<u>', '</u>']
+            };
+            if (!tags[format]) return;
+
+            const [openTag, closeTag] = tags[format];
+            const selected = field.value.substring(start, end);
+            field.setRangeText(openTag + selected + closeTag, start, end, 'select');
+            field.focus();
+        }
+
+        window.addArticleSubItem = function(artIndex, type) {
+            syncVisualBuilderToState();
+            if (!currentEditingItems[artIndex].subItems) currentEditingItems[artIndex].subItems = [];
+            
+            let defaultText = '';
+            if (type === 'inciso') defaultText = 'I - Novo inciso';
+            else if (type === 'alinea') defaultText = '';
+            else if (type === 'paragrafo') defaultText = '§ 1º Novo parágrafo';
+            else if (type === 'paragrafo_unico') defaultText = 'Parágrafo único. Disposição sobre a norma...';
+            else if (type === 'exemplo') defaultText = 'Ex: Situação de aplicação...';
+
+            currentEditingItems[artIndex].subItems.push({ type, text: defaultText });
+            renderVisualBuilder();
+        }
+
+        window.removeArticleSubItem = function(artIndex, subIndex) {
+            showMsg('Segurança', 'Confirma a exclusão deste sub-elemento? Esta ação só será aplicada após sua confirmação.', 'warning', () => {
+                syncVisualBuilderToState();
+                currentEditingItems[artIndex].subItems.splice(subIndex, 1);
+                renderVisualBuilder();
+            });
+        }
+
+        window.moveArticleSubItem = function(artIndex, subIndex, direction) {
+            syncVisualBuilderToState();
+            const subItems = currentEditingItems[artIndex].subItems;
+            if (!subItems) return;
+            const target = subIndex + direction;
+            if (target < 0 || target >= subItems.length) return;
+            
+            const temp = subItems[subIndex];
+            subItems[subIndex] = subItems[target];
+            subItems[target] = temp;
+            renderVisualBuilder();
+        }
+
+        function syncVisualBuilderToState() {
+            const container = document.getElementById('visualBuilderContainer');
+            if (!container) return;
+            const cardElements = container.querySelectorAll('.builder-item-card');
+            
+            cardElements.forEach((cardEl, idx) => {
+                if (!currentEditingItems[idx]) return;
+                const type = currentEditingItems[idx].type;
+
+                if (type === 'titulo' || type === 'secao') {
+                    const input = cardEl.querySelector('.item-text-input');
+                    if (input) currentEditingItems[idx].text = input.value;
+                } else if (type === 'spoiler') {
+                    const titleInput = cardEl.querySelector('.spoiler-title-input');
+                    const contentInput = cardEl.querySelector('.spoiler-content-input');
+                    if (titleInput) currentEditingItems[idx].title = titleInput.value;
+                    if (contentInput) currentEditingItems[idx].content = contentInput.value;
+                } else if (type === 'artigo') {
+                    const numInput = cardEl.querySelector('.art-number-input');
+                    const contentInput = cardEl.querySelector('.art-content-input');
+                    if (numInput) currentEditingItems[idx].number = numInput.value;
+                    if (contentInput) currentEditingItems[idx].content = contentInput.value;
+
+                    const subInputs = cardEl.querySelectorAll('.subitem-input');
+                    if (currentEditingItems[idx].subItems) {
+                        subInputs.forEach((subInp, sIdx) => {
+                            if (currentEditingItems[idx].subItems[sIdx]) {
+                                currentEditingItems[idx].subItems[sIdx].text = subInp.value;
+                            }
+                        });
+                    }
+                }
+            });
+        }
+
+        function renderVisualBuilder() {
+            const container = document.getElementById('visualBuilderContainer');
+            if (!container) return;
+            
+            if (currentEditingItems.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-400 py-8 bg-white rounded-xl border border-dashed border-slate-300 text-xs">Nenhum item adicionado ainda. Clique nos botões acima para adicionar.</div>`;
+                return;
+            }
+
+            let html = '';
+            currentEditingItems.forEach((item, index) => {
+                const isFirst = index === 0;
+                const isLast = index === currentEditingItems.length - 1;
+
+                html += `
+                    <div class="builder-item-card bg-white rounded-xl p-4 border border-slate-200 shadow-sm relative group space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                                    item.type === 'titulo' ? 'bg-slate-800 text-white' :
+                                    item.type === 'secao' ? 'bg-blue-800 text-white' :
+                                    item.type === 'spoiler' ? 'bg-emerald-700 text-white' : 'bg-[var(--bope-accent)] text-white'
+                                }">
+                                    ${item.type === 'titulo' ? 'Título' : item.type === 'secao' ? 'Seção' : item.type === 'spoiler' ? 'Spoiler' : 'Artigo'} #${index + 1}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button onclick="window.moveBuilderItem(${index}, -1)" ${isFirst ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg text-xs" title="Mover bloco para cima"><i class="fas fa-arrow-up"></i></button>
+                                <button onclick="window.moveBuilderItem(${index}, 1)" ${isLast ? 'disabled class="opacity-30 cursor-not-allowed"' : ''} class="p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg text-xs" title="Mover bloco para baixo"><i class="fas fa-arrow-down"></i></button>
+                                <button onclick="window.removeBuilderItem(${index})" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg text-xs" title="Excluir este bloco"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                `;
+
+                if (item.type === 'titulo' || item.type === 'secao') {
+                    html += `
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Texto do ${item.type === 'titulo' ? 'Título' : 'Seção'}</label>
+                            <input type="text" value="${item.text || ''}" class="item-text-input w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold uppercase outline-none focus:border-[var(--bope-accent)]" placeholder="Ex: TÍTULO I - DOS CRIMES...">
+                        </div>
+                    `;
+                } else if (item.type === 'spoiler') {
+                    html += `
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Título do spoiler</label>
+                                <input type="text" value="${item.title || ''}" class="spoiler-title-input w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold outline-none focus:border-[var(--bope-accent)]" placeholder="Ex: Cargos">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Conteúdo exibido ao abrir</label>
+                                <textarea rows="5" class="spoiler-content-input w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-[var(--bope-accent)] leading-relaxed" placeholder="Digite os cargos, regras ou informações. Use quebras de linha para organizar.">${item.content || ''}</textarea>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.type === 'artigo') {
+                    const subItems = ensureSubItems(item);
+
+                    html += `
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Artigo Nº</label>
+                                <input type="text" value="${item.number || ''}" class="art-number-input w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-bold outline-none focus:border-[var(--bope-accent)]" placeholder="Art. 1º">
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Conteúdo do Artigo</label>
+                                <textarea rows="2" class="art-content-input w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-[var(--bope-accent)] leading-relaxed" placeholder="Descreva o caput do artigo...">${item.content || ''}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Sub-itens com Setas de Subir/Descer -->
+                        <div class="pl-4 border-l-2 border-[var(--bope-accent)] space-y-3 mt-3 bg-slate-50/70 p-3 rounded-xl border border-slate-200/60">
+                            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 pb-2 border-b border-slate-200">
+                                <span class="text-[10px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="fas fa-arrows-up-down text-[var(--bope-accent)]"></i> Sub-elementos do Artigo (Setas para Reordenar)
+                                </span>
+                                <div class="flex gap-1.5 flex-wrap">
+                                    <button onclick="window.addArticleSubItem(${index}, 'inciso')" class="px-2 py-1 bg-slate-200 text-slate-800 hover:bg-slate-300 rounded-lg text-[10px] font-bold transition-colors">
+                                        + Inciso
+                                    </button>
+                                    <button onclick="window.addArticleSubItem(${index}, 'alinea')" class="px-2 py-1 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 rounded-lg text-[10px] font-bold transition-colors">
+                                        + Alínea (a, b, c…)
+                                    </button>
+                                    <button onclick="window.addArticleSubItem(${index}, 'paragrafo')" class="px-2 py-1 bg-blue-50 text-blue-800 hover:bg-blue-100 rounded-lg text-[10px] font-bold transition-colors">
+                                        + Parágrafo (§)
+                                    </button>
+                                    <button onclick="window.addArticleSubItem(${index}, 'paragrafo_unico')" class="px-2 py-1 bg-blue-100 text-blue-900 hover:bg-blue-200 rounded-lg text-[10px] font-bold transition-colors">
+                                        + Parágrafo Único
+                                    </button>
+                                    <button onclick="window.addArticleSubItem(${index}, 'exemplo')" class="px-2 py-1 bg-amber-100 text-amber-900 hover:bg-amber-200 rounded-lg text-[10px] font-bold transition-colors">
+                                        + Exemplo Prático
+                                    </button>
+                                </div>
+                            </div>
+                    `;
+                    
+                    if (subItems && subItems.length > 0) {
+                        subItems.forEach((sub, subIdx) => {
+                            const isSubFirst = subIdx === 0;
+                            const isSubLast = subIdx === subItems.length - 1;
+
+                            html += `
+                                <div class="flex gap-2 items-center bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+                                    <span class="shrink-0 px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider ${
+                                        sub.type === 'inciso' ? 'bg-slate-100 text-slate-800 border border-slate-200' :
+                                        sub.type === 'alinea' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' :
+                                        sub.type === 'paragrafo' ? 'bg-blue-50 text-blue-800 border border-blue-100' :
+                                        sub.type === 'paragrafo_unico' ? 'bg-blue-100 text-blue-900 border border-blue-200' : 'bg-amber-100 text-amber-800'
+                                    }">
+                                        ${sub.type === 'inciso' ? 'Inciso' : sub.type === 'alinea' ? 'Alínea' : sub.type === 'paragrafo' ? 'Parágrafo (§)' : sub.type === 'paragrafo_unico' ? 'Parágrafo Único' : 'Exemplo'}
+                                    </span>
+                                    <input type="text" value="${sub.text}" class="subitem-input flex-1 bg-slate-50 border border-slate-300 rounded-lg p-1.5 text-xs outline-none focus:border-[var(--bope-accent)]" placeholder="Conteúdo...">
+                                    
+                                    <div class="flex items-center gap-0.5 shrink-0">
+                                        <button onclick="window.moveArticleSubItem(${index}, ${subIdx}, -1)" ${isSubFirst ? 'disabled class="opacity-25 cursor-not-allowed"' : ''} class="p-1 text-slate-600 hover:bg-slate-100 rounded text-xs" title="Subir este elemento">
+                                            <i class="fas fa-chevron-up"></i>
+                                        </button>
+                                        <button onclick="window.moveArticleSubItem(${index}, ${subIdx}, 1)" ${isSubLast ? 'disabled class="opacity-25 cursor-not-allowed"' : ''} class="p-1 text-slate-600 hover:bg-slate-100 rounded text-xs" title="Descer este elemento">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                        <button onclick="window.removeArticleSubItem(${index}, ${subIdx})" class="p-1 text-red-500 hover:bg-red-50 rounded text-xs ml-1" title="Excluir sub-elemento">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += `<p class="text-[10px] text-slate-400 italic py-1">Nenhum inciso, parágrafo, parágrafo único ou exemplo adicionado a este artigo.</p>`;
+                    }
+                    html += `</div>`;
+                }
+
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        window.saveChapterEdits = async function() {
+            syncVisualBuilderToState();
+            const cIndex = parseInt(document.getElementById('editChapterIndex').value);
+            const title = document.getElementById('editChapterTitleInput').value.trim();
+
+            if (!documentsData[currentSection].chapters) {
+                documentsData[currentSection].chapters = [];
+            }
+
+            const operation = cIndex >= 0 ? 'Capítulo atualizado' : 'Capítulo criado';
+            if (cIndex >= 0) {
+                documentsData[currentSection].chapters[cIndex].title = title;
+                documentsData[currentSection].chapters[cIndex].items = currentEditingItems;
+            } else {
+                documentsData[currentSection].chapters.push({ title, items: currentEditingItems });
+            }
+
+            await saveCurrentDocument();
+            await recordAudit(operation, `Seção: ${currentSection}; capítulo: ${title || '(sem título)'}`);
+            closeChapterEditor();
+            renderDocument();
+        }
+
+        window.deleteCurrentChapter = async function() {
+            const cIndex = parseInt(document.getElementById('editChapterIndex').value);
+            if (cIndex < 0) return;
+
+            showMsg("Atenção", "Tem certeza que deseja excluir este capítulo inteiro permanentemente?", "warning", async () => {
+                documentsData[currentSection].chapters.splice(cIndex, 1);
+                await saveCurrentDocument();
+                await recordAudit('Capítulo excluído', `Seção: ${currentSection}; capítulo removido: ${cIndex + 1}`);
+                closeChapterEditor();
+                renderDocument();
+            });
+        }
+
+        window.exportLegislationBackup = function() {
+            if (!currentUserData || !isAdminRole(currentUserData.role)) return;
+            recordAudit('Backup do acervo exportado', 'Exportação do JSON das legislações.');
+            const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), documents: documentsData }, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'backup-legislacoes-bope.json'; a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        window.importLegislationBackup = async function(event) {
+            if (!currentUserData || !isAdminRole(currentUserData.role)) return;
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            try {
+                const parsed = JSON.parse(await file.text());
+                const docs = parsed.documents || parsed;
+                if (!docs || typeof docs !== 'object' || Array.isArray(docs)) throw new Error('Formato inválido');
+                showMsg('Restaurar backup', 'Isso substituirá as legislações atuais pelas informações do arquivo. Faça isso somente se tiver certeza e possuir backup atualizado.', 'warning', async () => {
+                    for (const [key, data] of Object.entries(docs)) {
+                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'pc_vademecum_docs', key), data);
+                    }
+                    let restoredAuditCount = 0;
+                    if (Array.isArray(parsed.auditLogs)) {
+                        for (const log of parsed.auditLogs) {
+                            if (!log || typeof log !== 'object') continue;
+                            const { id, ...logData } = log;
+                            if (id && /^[A-Za-z0-9_-]+$/.test(id)) {
+                                await setDoc(doc(db, ...publicDataPath, AUDIT_COLLECTION, id), logData);
+                                restoredAuditCount++;
+                            }
+                        }
+                    }
+                    documentsData = docs;
+                    await recordAudit('Backup restaurado', `Seções: ${Object.keys(docs).join(', ')}; registros de auditoria restaurados: ${restoredAuditCount}.`);
+                    renderDocument();
+                    showMsg('Sucesso', `Backup importado. Acervo restaurado e ${restoredAuditCount} registro(s) de auditoria recuperado(s), quando presentes no arquivo.`, 'info');
+                    event.target.value = '';
+                });
+            } catch (err) {
+                console.error('Erro ao importar backup:', err);
+                showMsg('Erro', 'Não foi possível ler o backup. Selecione um JSON exportado por este site.', 'error');
+            }
+        };
+
+        window.clearAuditHistory = async function() {
+            if (!currentUserData || !isCorregedorGeral(currentUserData)) {
+                showMsg('Acesso restrito', 'Somente o Corregedor-Geral pode zerar o histórico de auditoria.', 'error');
+                return;
+            }
+            const confirmed = window.confirm('Tem certeza? Todos os registros atuais de auditoria serão apagados permanentemente. Esta ação não pode ser desfeita.');
+            if (!confirmed) return;
+            const status = document.getElementById('auditStatus');
+            const tbody = document.getElementById('auditTableBody');
+            status.textContent = 'Apagando registros de teste…';
+            try {
+                const logsRef = collection(db, ...publicDataPath, AUDIT_COLLECTION);
+                const snap = await getDocs(logsRef);
+                // Delete in manageable batches to avoid exceeding Firestore write limits.
+                let batch = writeBatch(db);
+                let pending = 0;
+                for (const item of snap.docs) {
+                    batch.delete(item.ref);
+                    pending++;
+                    if (pending >= 400) {
+                        await batch.commit();
+                        batch = writeBatch(db);
+                        pending = 0;
+                    }
+                }
+                if (pending > 0) await batch.commit();
+                tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-slate-400">Ainda não há movimentações registradas.</td></tr>';
+                status.textContent = 'Histórico zerado. Os próximos eventos serão registrados normalmente.';
+            } catch (err) {
+                console.error('Falha ao zerar auditoria:', err);
+                status.textContent = 'Não foi possível apagar o histórico. Verifique as regras de exclusão do Firestore.';
+                showMsg('Erro ao zerar histórico', 'O Firebase recusou a exclusão ou ocorreu um erro de conexão. Confira as regras do Firestore.', 'error');
+            }
+        };
+
+        window.refreshAuditLog = async function() {
+            const status = document.getElementById('auditStatus');
+            const tbody = document.getElementById('auditTableBody');
+            if (!currentUserData || !isCorregedoria(currentUserData.role)) {
+                status.textContent = 'Acesso restrito à Corregedoria.';
+                tbody.innerHTML = '';
+                return;
+            }
+            status.textContent = 'Carregando movimentações…';
+            try {
+                const logsRef = collection(db, ...publicDataPath, AUDIT_COLLECTION);
+                const logsQuery = query(logsRef, orderBy('createdAt', 'desc'), limit(100));
+                const snap = await getDocs(logsQuery);
+                const rows = [];
+                snap.forEach(item => rows.push({ id: item.id, ...item.data() }));
+                if (!rows.length) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-slate-400">Ainda não há movimentações registradas.</td></tr>';
+                } else {
+                    tbody.innerHTML = rows.map(log => `<tr class="border-t border-slate-100 align-top"><td class="p-3 whitespace-nowrap">${escapeAuditText(log.createdAt ? new Date(log.createdAt).toLocaleString('pt-BR') : 'Data indisponível')}</td><td class="p-3"><strong>${escapeAuditText(log.actor || 'Não identificado')}</strong><div class="text-slate-400">${escapeAuditText(log.role || '')}</div></td><td class="p-3 font-semibold">${escapeAuditText(log.action || 'Movimentação')}</td><td class="p-3 whitespace-normal break-words">${escapeAuditText(log.details || '')}</td></tr>`).join('');
+                }
+                status.textContent = `Exibindo ${rows.length} registro(s) mais recente(s).`;
+            } catch (err) {
+                console.error('Falha ao carregar auditoria:', err);
+                status.textContent = 'Não foi possível carregar o histórico. Verifique as regras de acesso do Firestore.';
+            }
+        };
+
+        window.exportFullBackup = async function() {
+            if (!currentUserData || !isCorregedoria(currentUserData.role)) return;
+            try {
+                const logsSnap = await getDocs(query(collection(db, ...publicDataPath, AUDIT_COLLECTION), orderBy('createdAt', 'desc'), limit(1000)));
+                const logs = [];
+                logsSnap.forEach(item => logs.push({ id: item.id, ...item.data() }));
+                const payload = { format: 'bope-full-backup', version: 1, exportedAt: new Date().toISOString(), documents: documentsData, auditLogs: logs, accessList: (authData.users || []).map(u => ({ username: u.username, role: u.role })) };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url; a.download = 'backup-completo-bope.json'; a.click(); URL.revokeObjectURL(url);
+                await recordAudit('Backup completo exportado', `Inclui acervo, lista de acessos sem hashes de senha e até ${logs.length} registros de auditoria.`);
+            } catch (err) {
+                console.error('Falha ao exportar backup completo:', err);
+                showMsg('Erro no backup', 'Não foi possível exportar o backup completo. Confira a permissão de leitura do histórico.', 'error');
+            }
+        };
+
+        window.switchAdminTab = function(tab) {
+            if (!currentUserData || !isCorregedoria(currentUserData.role)) return;
+
+            const isGeneral = isCorregedorGeral(currentUserData);
+            // Bloqueio efetivo: mesmo uma chamada manual não permite abrir a aba exclusiva.
+            if (tab === 'paineladmin' && !isGeneral) {
+                tab = 'usuarios';
+                showMsg('Acesso restrito', 'A aba Painel Administrativo é exclusiva do Corregedor-Geral.', 'error');
+            }
+
+            document.querySelectorAll('[data-general-only]').forEach(el => {
+                el.classList.toggle('hidden', !isGeneral);
+            });
+            document.querySelectorAll('[data-admin-tab]').forEach(panel => {
+                const isExclusivePanel = panel.dataset.adminTab === 'paineladmin';
+                panel.classList.toggle('hidden', panel.dataset.adminTab !== tab || (isExclusivePanel && !isGeneral));
+            });
+            document.querySelectorAll('[data-admin-tab-button]').forEach(button => {
+                const active = button.dataset.adminTabButton === tab;
+                const generalOnly = button.dataset.generalOnly === 'true';
+                const permitted = !generalOnly || isGeneral;
+                button.className = (active ? 'px-4 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white' : 'px-4 py-2 rounded-lg text-xs font-bold bg-white text-slate-700 border') + ((!permitted) ? ' hidden' : '');
+            });
+            if (tab === 'auditoria') window.refreshAuditLog();
+        };
+
+        window.openAccessCenter = async function() {
+            if (!currentUserData || !isCorregedoria(currentUserData.role)) {
+                showMsg('Acesso restrito', 'Somente usuários cadastrados com o perfil Corregedoria podem acessar o painel administrativo.', 'error');
+                return;
+            }
+            const isGeneral = isCorregedorGeral(currentUserData);
+            document.querySelectorAll('[data-general-only]').forEach(el => el.classList.toggle('hidden', !isGeneral));
+            const hasGeneral = (authData.users || []).some(u => normalizeRole(u.role) === 'Corregedor-Geral');
+            const recoveryBox = document.getElementById('generalRoleRecovery');
+            recoveryBox?.classList.toggle('hidden', hasGeneral || isCorregedorGeral(currentUserData));
+            document.getElementById('siteLogoInput').value = authData.logoUrl || ''; 
+            const titles = authData.titleOverrides || {};
+            document.getElementById('titleMenuCodigoPenal').value = titles.codigo_penal_menu || SECTIONS.find(x=>x.id==='codigo_penal')?.title || '';
+            document.getElementById('titleDocCodigoPenal').value = titles.codigo_penal_doc || documentsData.codigo_penal?.title || '';
+            document.getElementById('titleMenuConduta').value = titles.codigo_processo_penal_menu || SECTIONS.find(x=>x.id==='codigo_processo_penal')?.title || '';
+            document.getElementById('titleDocConduta').value = titles.codigo_processo_penal_doc || documentsData.codigo_processo_penal?.title || '';
+            document.getElementById('titlePce').value = titles.procedimentos_policiais_doc || documentsData.procedimentos_policiais?.title || '';
+            renderUsersTable();
+            // O Corregedor-Geral entra diretamente na sua aba exclusiva; corregedores comuns não conseguem abri-la.
+            window.switchAdminTab('usuarios');
+            const modal = document.getElementById('accessModal');
+            const card = document.getElementById('accessModalCard');
+            modal.classList.remove('hidden');
+            setTimeout(() => card.classList.remove('scale-95', 'opacity-0'), 10);
+        }
+
+        window.closeAccessCenter = function() {
+            const modal = document.getElementById('accessModal');
+            const card = document.getElementById('accessModalCard');
+            card.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, char => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[char]);
+        }
+
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            if (!tbody) return;
+            let html = '';
+            authData.users.forEach((u, i) => {
+html += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-4 py-3 font-semibold text-slate-900 align-middle">${escapeHtml(String(u.username || ''))}</td>
+                        <td class="px-4 py-3 text-slate-600 align-middle">${escapeHtml(String(u.role || ''))}</td>
+                        <td class="px-4 py-3 align-middle">
+                            <div class="flex flex-wrap items-center justify-center gap-2">
+                                <button type="button" onclick="window.openChangePassModal(${i}, false)" class="inline-flex items-center justify-center gap-1.5 min-h-9 px-3 py-2 bg-blue-50 text-blue-700 text-xs font-semibold rounded-lg hover:bg-blue-100 whitespace-nowrap" title="Trocar senha"><i class="fas fa-key"></i><span>Trocar senha</span></button>
+                                <button type="button" onclick="window.deleteUser(${i})" class="inline-flex items-center justify-center gap-1.5 min-h-9 px-3 py-2 bg-red-50 text-red-600 text-xs font-semibold rounded-lg hover:bg-red-100 whitespace-nowrap" title="Remover acesso"><i class="fas fa-user-minus"></i><span>Remover acesso</span></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        window.saveDocumentTitles = async function() {
+            if (!currentUserData || !isCorregedoria(currentUserData.role)) { showMsg('Acesso restrito', 'Somente a Corregedoria pode alterar os títulos.', 'error'); return; }
+            const read = id => document.getElementById(id).value.trim();
+            const values = {
+                codigo_penal_menu: read('titleMenuCodigoPenal'),
+                codigo_penal_doc: read('titleDocCodigoPenal'),
+                codigo_processo_penal_menu: read('titleMenuConduta'),
+                codigo_processo_penal_doc: read('titleDocConduta'),
+                procedimentos_policiais_doc: read('titlePce')
+            };
+            if (Object.values(values).some(v => !v)) { showMsg('Campos obrigatórios', 'Preencha todos os títulos antes de salvar.', 'error'); return; }
+            authData.titleOverrides = { ...(authData.titleOverrides || {}), ...values };
+            SECTIONS.forEach(sec => { const key = sec.id + '_menu'; if (authData.titleOverrides[key]) sec.title = authData.titleOverrides[key]; });
+            if (documentsData.codigo_penal) documentsData.codigo_penal.title = values.codigo_penal_doc;
+            if (documentsData.codigo_processo_penal) documentsData.codigo_processo_penal.title = values.codigo_processo_penal_doc;
+            if (documentsData.procedimentos_policiais) documentsData.procedimentos_policiais.title = values.procedimentos_policiais_doc;
+            await saveAuthData();
+            renderNav(); renderDocument();
+            await recordAudit('Títulos dos documentos alterados', 'Títulos do menu e do acervo atualizados pela manutenção.');
+            showMsg('Títulos salvos', 'Os novos nomes foram salvos nas configurações do sistema.', 'info');
+        };
+
+        window.saveSiteLogo = async function() {
+            if (!currentUserData || !isCorregedoria(currentUserData.role)) return;
+            const url = document.getElementById('siteLogoInput').value.trim();
+            authData.logoUrl = url;
+            await saveAuthData();
+            await recordAudit('Logomarca alterada', url ? 'URL da logomarca atualizada.' : 'Logomarca removida; padrão restaurado.');
+            applySiteLogo();
+            showMsg("Sucesso", "Logomarca do menu atualizada com sucesso!", "info");
+        }
+
+        window.saveLoginPanelLogo = async function() {
+            if (!currentUserData || !isCorregedoria(currentUserData.role)) { showMsg('Acesso restrito', 'Somente a Corregedoria pode alterar esta imagem.', 'error'); return; }
+            const input = document.getElementById('loginPanelLogoInput');
+            const url = (input?.value || '').trim();
+            if (url && !/^https:\/\//i.test(url)) { showMsg('URL inválida', 'Use um endereço de imagem iniciado por https://.', 'error'); return; }
+            authData.loginLogoUrl = url;
+            await saveAuthData();
+            applySiteLogo();
+            await recordAudit('Imagem do acesso da Corregedoria alterada', url ? 'URL da imagem atualizada.' : 'Imagem personalizada removida.');
+            showMsg('Sucesso', 'Imagem do painel de acesso atualizada.', 'info');
+        }
+
+        window.openAddUserModal = function() {
+            if (!currentUserData || !isCorregedoria(currentUserData.role)) { showMsg('Acesso restrito', 'Somente a Corregedoria pode cadastrar usuários.', 'error'); return; }
+            document.getElementById('newQra').value = '';
+            document.getElementById('newPass').value = '';
+            const modal = document.getElementById('addUserModal');
+            const card = document.getElementById('addUserModalCard');
+            modal.classList.remove('hidden');
+            setTimeout(() => card.classList.remove('scale-95', 'opacity-0'), 10);
+        }
+
+        window.closeAddUserModal = function() {
+            const modal = document.getElementById('addUserModal');
+            const card = document.getElementById('addUserModalCard');
+            card.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        window.submitAddUser = async function() {
+            try {
+                const qra = document.getElementById('newQra').value.trim();
+                if (!currentUserData || !isCorregedoria(currentUserData.role)) { showMsg('Acesso negado', 'Somente a Corregedoria pode cadastrar contas.', 'error'); return; }
+                const requestedRole = document.getElementById('newRoleSelect').value;
+                const generalAlreadyExists = (authData.users || []).some(u => normalizeRole(u.role) === 'Corregedor-Geral');
+                if (requestedRole === 'Corregedor-Geral' && !isCorregedorGeral(currentUserData) && generalAlreadyExists) {
+                    showMsg('Acesso restrito', 'Somente o Corregedor-Geral pode cadastrar outro usuário com esse cargo. Como já existe uma conta desse tipo, a exceção para cadastrar o primeiro não está mais disponível.', 'error');
+                    return;
+                }
+                const role = normalizeRole(requestedRole);
+                const pass = document.getElementById('newPass').value;
+
+                if (!qra || !pass) {
+                    showMsg("Atenção", "Preencha o QRA/Nome e a senha inicial.", "warning");
+                    return;
+                }
+                if (pass.length < 8) { showMsg('Senha inválida', 'A senha deve ter pelo menos 8 caracteres.', 'error'); return; }
+
+                if (authData.users.some(u => u.username.toLowerCase() === qra.toLowerCase())) {
+                    showMsg("Erro", "Já existe um agente cadastrado com este QRA.", "error");
+                    return;
+                }
+
+                await bopeApi('create-user', { qra, password: pass, role }, true);
+                await refreshServerUsers();
+                closeAddUserModal();
+            } catch (error) {
+                console.error("Erro ao cadastrar:", error);
+                showMsg("Erro", "Ocorreu um erro ao processar o cadastro.", "error");
+            }
+        }
+
+        window.deleteUser = function(i) {
+            if (!currentUserData || !isCorregedoria(currentUserData.role)) { showMsg('Acesso restrito', 'Somente a Corregedoria pode remover acessos.', 'error'); return; }
+            if (!Number.isInteger(Number(i)) || Number(i) < 0 || Number(i) >= (authData.users || []).length) { showMsg('Usuário não encontrado', 'Atualize a lista de usuários e tente novamente.', 'error'); return; }
+            i = Number(i);
+            showMsg("Atenção", `Deseja remover o acesso do(a) agente ${authData.users[i].username}?`, "warning", async () => {
+                const removedUser = authData.users[i];
+                if (removedUser.username.toLowerCase() === currentUserData?.username?.toLowerCase()) { showMsg('Operação impedida', 'Você não pode remover o próprio acesso enquanto estiver conectado.', 'error'); return; }
+                if (isCorregedoria(removedUser.role) && authData.users.filter(u => isCorregedoria(u.role)).length <= 1) { showMsg('Operação impedida', 'Cadastre outro usuário da Corregedoria antes de remover o último acesso dessa função.', 'error'); return; }
+                await bopeApi('delete-user', { id: removedUser.id }, true);
+                await refreshServerUsers();
+            });
+        }
+
+        window.openSelfPasswordModal = function() {
+            if (!currentUserData) return;
+            const index = authData.users.findIndex(u => u.username.toLowerCase() === currentUserData.username.toLowerCase());
+            openChangePassModal(index, true);
+        }
+
+        window.openChangePassModal = function(index, isSelf) {
+            if (!currentUserData) return;
+            if (!Number.isInteger(Number(index)) || Number(index) < 0 || Number(index) >= (authData.users || []).length) {
+                showMsg('Usuário não encontrado', 'Atualize a lista de usuários e tente novamente.', 'error');
+                return;
+            }
+            index = Number(index);
+            const ownIndex = authData.users.findIndex(u => (u.username || '').toLowerCase() === (currentUserData.username || '').toLowerCase());
+            if (isSelf && index !== ownIndex) { showMsg('Acesso negado', 'Você só pode alterar a própria senha.', 'error'); return; }
+            if (!isSelf && !isCorregedoria(currentUserData.role)) { showMsg('Acesso restrito', 'Somente a Corregedoria pode redefinir a senha de outro militar.', 'error'); return; }
+            document.getElementById('changePassTargetIndex').value = index;
+            document.getElementById('newPassInput').value = '';
+            const oldContainer = document.getElementById('oldPassContainer');
+            
+            if (isSelf) {
+                document.getElementById('changePassDesc').innerText = "Sua sessão está autenticada. Informe a nova senha para atualizar seu acesso.";
+                oldContainer.classList.add('hidden');
+                document.getElementById('oldPassInput').value = '';
+            } else {
+                document.getElementById('changePassDesc').innerText = `Redefinindo senha para o QRA: ${authData.users[index].username}`;
+                oldContainer.classList.add('hidden');
+            }
+
+            const modal = document.getElementById('changePassModal');
+            const card = document.getElementById('changePassModalCard');
+            modal.classList.remove('hidden');
+            setTimeout(() => card.classList.remove('scale-95', 'opacity-0'), 10);
+        }
+
+        window.closeChangePassModal = function() {
+            const modal = document.getElementById('changePassModal');
+            const card = document.getElementById('changePassModalCard');
+            card.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        window.submitChangePass = async function() {
+            try {
+                if (!currentUserData) { showMsg('Acesso negado', 'Entre no sistema para alterar uma senha.', 'error'); return; }
+                const index = parseInt(document.getElementById('changePassTargetIndex').value);
+                const newP = document.getElementById('newPassInput').value;
+                const ownIndex = authData.users.findIndex(u => (u.username || '').toLowerCase() === (currentUserData.username || '').toLowerCase());
+                const isSelf = index === ownIndex;
+                if (!isSelf && !isCorregedoria(currentUserData.role)) { showMsg('Acesso restrito', 'Somente a Corregedoria pode redefinir a senha de outro militar.', 'error'); return; }
+
+                if (!newP) {
+                    showMsg("Atenção", "A nova senha não pode ser vazia.", "warning");
+                    return;
+                }
+
+                const target = authData.users[index];
+                await bopeApi('change-password', { id: target.id, password: newP }, true);
+                closeChangePassModal();
+                showMsg("Sucesso", "Senha atualizada com sucesso!", "info");
+            } catch (error) {
+                console.error("Erro ao mudar senha:", error);
+                showMsg("Erro", "Ocorreu um erro ao atualizar a senha.", "error");
+            }
+        }
+
+        function showMsg(title, text, type = 'info', onConfirm = null) {
+            const modal = document.getElementById('msgModal');
+            const card = document.getElementById('msgModalCard');
+            const btnCancel = document.getElementById('msgBtnCancel');
+            const btnConfirm = document.getElementById('msgBtnConfirm');
+
+            document.getElementById('msgTitle').innerText = title;
+            document.getElementById('msgText').innerText = text;
+
+            const newConfirm = btnConfirm.cloneNode(true);
+            const newCancel = btnCancel.cloneNode(true);
+            btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
+            btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+
+            newConfirm.className = type === 'error'
+                ? 'px-4 py-2 text-sm bg-red-600 text-white rounded-xl font-bold'
+                : 'px-4 py-2 text-sm bg-[var(--bope-dark)] text-white rounded-xl font-bold';
+            newConfirm.innerHTML = onConfirm ? '<i class="fas fa-trash-alt mr-1"></i> Confirmar exclusão' : 'OK';
+            newCancel.classList.toggle('hidden', !onConfirm);
+            newCancel.innerText = 'Cancelar';
+
+            newConfirm.onclick = async () => {
+                if (onConfirm) await onConfirm();
+                closeMsg();
+            };
+            newCancel.onclick = () => closeMsg();
+
+            modal.classList.remove('hidden');
+            setTimeout(() => card.classList.remove('scale-95', 'opacity-0'), 10);
+        }
+        function closeMsg() {
+            const modal = document.getElementById('msgModal');
+            const card = document.getElementById('msgModalCard');
+            card.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
