@@ -694,6 +694,17 @@
             SEED_DOCS[id] = { title, chapters: [] };
         });
 
+        function createEmptyDocuments() {
+            const result = {};
+            SECTIONS.forEach(section => {
+                result[section.id] = { title: section.title, chapters: [] };
+                (section.children || []).forEach(child => {
+                    result[child.id] = { title: child.title, chapters: [] };
+                });
+            });
+            return result;
+        }
+
         async function initApp() {
             try {
                 app = initializeApp(firebaseConfig);
@@ -719,19 +730,10 @@
             const docsRef = collection(db, 'artifacts', appId, 'public', 'data', 'pc_vademecum_docs');
             unsubscribeDocs = onSnapshot(docsRef, async (snapshot) => {
                 try {
-                    if (snapshot.empty) {
-                        // Não semeia automaticamente o banco novo: evita sobrescrever/importar conteúdo sem decisão explícita.
-                        documentsData = {};
-                        renderDocument();
-                        return;
-                    }
-                    documentsData = {};
+                    // Se o banco estiver vazio, disponibiliza documentos em branco na interface.
+                    // Eles só serão gravados quando a Corregedoria publicar/editar, sem conteúdo demonstrativo.
+                    documentsData = createEmptyDocuments();
                     snapshot.forEach(docSnap => { documentsData[docSnap.id] = normalizeViceCityText(docSnap.data()); });
-                    for (const [newDocId, newDocData] of Object.entries(SUBSECTION_SEEDS)) {
-                        if (!snapshot.docs.some(existing => existing.id === newDocId)) {
-                            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'pc_vademecum_docs', newDocId), { title: newDocData, chapters: [] });
-                        }
-                    }
                     const titleOverrides = authData.titleOverrides || {};
                     if (documentsData.codigo_penal) documentsData.codigo_penal.title = titleOverrides.codigo_penal_doc || documentsData.codigo_penal.title;
                     if (documentsData.codigo_processo_penal) documentsData.codigo_processo_penal.title = titleOverrides.codigo_processo_penal_doc || documentsData.codigo_processo_penal.title;
@@ -768,10 +770,11 @@
         }
 
         async function saveCurrentDocument() {
-            if (!currentUserData || !isAdminRole(currentUserData.role)) return;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'pc_vademecum_docs', currentSection);
-            await setDoc(docRef, documentsData[currentSection] || { chapters: [] }, { merge: true });
-            await recordAudit('Acervo alterado', `Documento/seção: ${currentSection}`);
+            if (!currentUserData || !isAdminRole(currentUserData.role)) {
+                throw new Error('Entre com uma conta da Corregedoria para publicar ou editar o acervo.');
+            }
+            const documentData = documentsData[currentSection] || { title: currentSection, chapters: [] };
+            await bopeApi('save-document', { key: currentSection, document: documentData }, true);
         }
 
         async function saveAuthData() {
@@ -1512,7 +1515,13 @@
                 documentsData[currentSection].chapters.push({ title, items: currentEditingItems });
             }
 
-            await saveCurrentDocument();
+            try {
+                await saveCurrentDocument();
+            } catch (error) {
+                console.error('Falha ao salvar capítulo:', error);
+                showMsg('Erro ao publicar', error?.message || 'Não foi possível salvar o capítulo. Confira a conexão e tente novamente.', 'error');
+                return;
+            }
             await recordAudit(operation, `Seção: ${currentSection}; capítulo: ${title || '(sem título)'}`);
             closeChapterEditor();
             renderDocument();
@@ -1551,7 +1560,7 @@
                 if (!docs || typeof docs !== 'object' || Array.isArray(docs)) throw new Error('Formato inválido');
                 showMsg('Restaurar backup', 'Isso substituirá as legislações atuais pelas informações do arquivo. Faça isso somente se tiver certeza e possuir backup atualizado.', 'warning', async () => {
                     for (const [key, data] of Object.entries(docs)) {
-                        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'pc_vademecum_docs', key), data);
+                        await bopeApi('save-document', { key, document: data }, true);
                     }
                     let restoredAuditCount = 0;
                     if (Array.isArray(parsed.auditLogs)) {
@@ -1936,8 +1945,14 @@ html += `
             newCancel.innerText = 'Cancelar';
 
             newConfirm.onclick = async () => {
-                if (onConfirm) await onConfirm();
-                closeMsg();
+                try {
+                    if (onConfirm) await onConfirm();
+                    closeMsg();
+                } catch (error) {
+                    console.error('Falha ao confirmar operação:', error);
+                    closeMsg();
+                    showMsg('Não foi possível concluir', error?.message || 'A operação falhou. Confira sua conexão e tente novamente.', 'error');
+                }
             };
             newCancel.onclick = () => closeMsg();
 
