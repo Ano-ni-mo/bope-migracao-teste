@@ -132,6 +132,19 @@ export async function handler(event) {
       await db.collection('artifacts').doc('pc-vademecum-system').collection('public').doc('data').collection('bope_audit_logs').add({actor:actor.qra,role:actor.role,action:'Senha alterada/resetada',details:`Conta afetada: ${target.qra}`,createdAt:FieldValue.serverTimestamp()});
       return response(200,{ok:true});
     }
+    if (action === 'save-document') {
+      if (!isCorregedoria) return response(403,{error:'Apenas a Corregedoria pode publicar ou editar o acervo.'});
+      const key = String(body.key || '');
+      const data = body.document;
+      if (!/^[A-Za-z0-9_-]{1,120}$/.test(key)) return response(400,{error:'Identificador de documento inválido.'});
+      if (!data || typeof data !== 'object' || Array.isArray(data) || !Array.isArray(data.chapters)) return response(400,{error:'Estrutura do documento inválida.'});
+      const serialized = JSON.stringify(data);
+      if (Buffer.byteLength(serialized, 'utf8') > 850000) return response(413,{error:'Este documento é muito grande para ser salvo de uma só vez. Divida o conteúdo em capítulos menores.'});
+      const title = String(data.title || '').slice(0,500);
+      await db.collection('artifacts').doc('pc-vademecum-system').collection('public').doc('data').collection('pc_vademecum_docs').doc(key).set({ ...data, title, updatedAt:FieldValue.serverTimestamp() }, { merge:true });
+      await db.collection('artifacts').doc('pc-vademecum-system').collection('public').doc('data').collection('bope_audit_logs').add({actor:actor.qra,role:actor.role,action:'Acervo alterado',details:`Documento/seção: ${key}`,createdAt:FieldValue.serverTimestamp()});
+      return response(200,{ok:true});
+    }
     if (action === 'save-site-config') {
       if (!isCorregedoria) return response(403,{error:'Acesso restrito à Corregedoria.'});
       const safe={logoUrl:String(body.logoUrl||'').slice(0,2048),loginLogoUrl:String(body.loginLogoUrl||'').slice(0,2048),titleOverrides:body.titleOverrides && typeof body.titleOverrides==='object' ? body.titleOverrides : {},updatedAt:FieldValue.serverTimestamp()};
